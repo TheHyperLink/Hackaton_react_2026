@@ -1,0 +1,87 @@
+
+/* --- Déclaration des variables animables (interpolation) --- */
+@property --tx { syntax: '<length-percentage>'; inherits: false; initial-value: 0vw; }
+@property --ty { syntax: '<length-percentage>'; inherits: false; initial-value: 0vh; }
+@property --sc { syntax: '<number>';            inherits: false; initial-value: 1; }
+@property --fl { syntax: '<number>';            inherits: false; initial-value: 0; } /* optionnel si tu veux mixer rotation+scaleY */
+
+/* --- Conteneur plein écran (derrière l'app) --- */
+.halloween-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(120vh 80vh at 50% 120%, #fe5500, #2d1043 90%);
+}
+
+/* --- Wrapper d'une chauve-souris (trajectoire + profondeur) --- */
+.bat {
+  position: absolute;
+
+  /* Valeurs courantes (mises à jour par @keyframes fly) */
+  --tx: 0vw;
+  --ty: 50vh;
+  --sc: 1;
+
+  /* Transform composé une seule fois */
+  transform: translate(var(--tx), var(--ty)) scale(var(--sc));
+  will-change: transform;
+
+  /* 2 animations: fly (wrapper) + flap (ailes via sélecteurs internes) */
+  animation-name: fly, none;            /* 'flap' n'est pas sur le wrapper */
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+
+  /* Couleur par défaut des bats */
+  color: #000;
+  /* Pour débug : mettre #fff + outline */
+}
+
+/* --- SVG ajusté au wrapper, pas d'animation sur lui-même --- */
+.bat-shape {
+  display: block;
+}
+
+/* --- Ailes : pivot (proche du corps), animation du battement --- */
+.wing {
+  transform-origin: 100px 50px; /* centre du corps dans le viewBox (x=100,y=50) */
+  animation: wing-flap 0.6s ease-in-out infinite;
+}
+
+/* Décale légèrement l'origine pour mieux simuler le battement */
+.wing-left  { transform-origin: 98px 50px; }
+.wing-right { transform-origin: 102px 50px; }
+
+/* Corps fixe (pas d'animation) */
+.body {
+  /* rien ici, mais tu peux ajouter un petit drop-shadow si tu veux */
+}
+
+/* --- Trajectoire hors-écran -> hors-écran, diagonale --- */
+@keyframes fly {
+  from {
+    --tx: var(--start-x);
+    --ty: var(--start-y);
+    --sc: var(--scale);
+  }
+  to {
+    --tx: var(--end-x);
+    --ty: calc(var(--start-y) + var(--delta-y));
+    --sc: var(--scale-end);
+  }
+}
+
+/* --- Battement (rotation des ailes) --- */
+@keyframes wing-flap {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(14deg); /* angle à ajuster pour ouvrir/fermer davantage */
+  }
+}
+
+/* (Optionnel) Si tu veux un battement asymétrique pour + de naturel :
+.wing-left  { animation-delay: 0s; }
+.wing-right { animation-delay: .08s; } */

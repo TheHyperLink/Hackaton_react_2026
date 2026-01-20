@@ -111,6 +111,12 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  username: string;
+  password: string;
+}
+
 export interface AuthResponse {
   [key: string]: string;
 }

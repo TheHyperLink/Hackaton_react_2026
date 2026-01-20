@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { FileTree } from "./files_components/FileTree"
 import TipTap from "./notes_components/TipTap"
 import { setEditorContentMarkdown, getEditorContentMarkdown } from "./../services/TipTapServices"
@@ -7,14 +7,40 @@ import { noteService } from "../services"
 
 export default function UserNotes() {
   const [isEditable, setIsEditable] = useState(true)
-  const [markdown, setMarkdown] = useState<string>("")
   const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle")
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [lastSavedContent, setLastSavedContent] = useState<string>("")
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isModifiedRef = useRef(false)
+  const reloadFoldersRef = useRef<(() => Promise<void>) | null>(null)
 
-  async function handleSave() {
-    if (!selectedNote) {
-      alert("Veuillez sélectionner une note")
+  // Recharger le contenu de la note sélectionnée
+  useEffect(() => {
+    if (!selectedNote) return
+
+    // Charger le contenu complet de la note depuis l'API
+    const loadNoteContent = async () => {
+      try {
+        const noteContent = selectedNote.content
+        setLastSavedContent(noteContent)
+        isModifiedRef.current = false
+        
+        // Utiliser un petit délai pour s'assurer que l'éditeur est prêt
+        setTimeout(() => {
+          setEditorContentMarkdown(noteContent)
+        }, 50)
+      } catch (error) {
+        console.error("Erreur lors du chargement de la note:", error)
+      }
+    }
+
+    loadNoteContent()
+  }, [selectedNote?.id])
+
+  // Fonction de sauvegarde
+  const autoSave = async () => {
+    if (!selectedNote || !isEditable || !isModifiedRef.current) {
       return
     }
 
@@ -23,7 +49,7 @@ export default function UserNotes() {
 
     try {
       setSaving(true)
-      setSaveStatus("idle")
+      setSaveStatus("saving")
 
       await noteService.updateNote({
         id: selectedNote.id,
@@ -31,30 +57,67 @@ export default function UserNotes() {
         content: content,
       })
 
-      setMarkdown(content)
+      // Mettre à jour le state selectedNote avec le nouveau contenu
+      setSelectedNote(prev => prev ? { ...prev, content } : null)
+      setLastSavedContent(content)
+      isModifiedRef.current = false
+      
+      // Recharger les dossiers et notes en temps réel
+      if (reloadFoldersRef.current) {
+        await reloadFoldersRef.current()
+      }
+      
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 2000)
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error)
+      console.error("Erreur lors de la sauvegarde automatique:", error)
       setSaveStatus("error")
-      setTimeout(() => setSaveStatus("idle"), 2000)
+      setTimeout(() => setSaveStatus("idle"), 3000)
     } finally {
       setSaving(false)
     }
   }
 
+  // Debounce : sauvegarde automatique 1.5 secondes après la fin de la modification
+  const triggerAutoSave = () => {
+    isModifiedRef.current = true
+    setSaveStatus("saving")
+
+    // Annuler le timer précédent
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    // Créer un nouveau timer
+    debounceTimerRef.current = setTimeout(() => {
+      autoSave()
+    }, 1500)
+  }
+
+  // Nettoyage au démontage
   useEffect(() => {
-    if (markdown === "") return
-    console.log("Contenu modifié:", markdown)
-  }, [markdown])
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="flex min-h-dvh w-full">
       {/* Panneau de gauche : FileTree */}
       <FileTree
+        onReloadRequest={(reloadFn) => {
+          reloadFoldersRef.current = reloadFn
+        }}
         onNoteClick={(note: NoteNode) => {
+          // Sauvegarder la note précédente si elle a été modifiée
+          if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current)
+            autoSave()
+          }
+
           setSelectedNote(note)
-          setEditorContentMarkdown(note.content)
         }}
       />
 
@@ -71,6 +134,11 @@ export default function UserNotes() {
           </h2>
 
           <div className="flex gap-2 items-center">
+            {saveStatus === "saving" && (
+              <span className="text-yellow-400 text-sm flex items-center gap-1">
+                <span className="inline-block animate-spin">⏳</span> Sauvegarde...
+              </span>
+            )}
             {saveStatus === "saved" && (
               <span className="text-green-400 text-sm">✅ Sauvegardé</span>
             )}
@@ -83,30 +151,6 @@ export default function UserNotes() {
               onClick={() => setIsEditable((v: boolean) => !v)}
             >
               {isEditable ? "Lecture seule" : "Édition"}
-            </button>
-
-            <button
-              className="px-3 py-1 rounded bg-orange-600 hover:bg-orange-500 text-sm hover:cursor-pointer disabled:opacity-50"
-              onClick={handleSave}
-              disabled={saving || !selectedNote}
-            >
-              <svg
-                className="w-6 h-6 text-gray-800 dark:text-white"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 10V4a1 1 0 0 0-1-1H9.914a1 1 0 0 0-.707.293L5.293 7.207A1 1 0 0 0 5 7.914V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2M10 3v4a1 1 0 0 1-1 1H5m5 6h9m0 0-2-2m2 2-2 2"
-                />
-              </svg>
             </button>
           </div>
         </div>
@@ -127,7 +171,7 @@ export default function UserNotes() {
           </div>
 
           {/* Zone de texte Tiptap */}
-          <div className="flex-1 p-4 overflow-hidden">
+          <div className="flex-1 p-4 overflow-hidden" onInput={triggerAutoSave}>
             <TipTap editable={isEditable} />
           </div>
         </div>

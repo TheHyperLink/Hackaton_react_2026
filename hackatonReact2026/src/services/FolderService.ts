@@ -45,7 +45,7 @@ export class FolderService {
    * PUT /folders/{id}
    */
   public async updateFolder(request: UpdateFolderRequest): Promise<FolderDetail> {
-    return this.apiClient.put<FolderDetail>(`/folders/${request.id}`, request);
+    return (await this.apiClient.put<FolderDetail>(`/folders/${request.id}`, request)) as FolderDetail;
   }
 
   /**

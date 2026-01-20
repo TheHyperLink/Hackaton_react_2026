@@ -1,7 +1,7 @@
 // Service pour les opérations d'Authentication (Connexion/Déconnexion)
 
 import { ApiClient } from "./ApiClient";
-import type { LoginRequest, AuthResponse } from "../types/ApiTypes";
+import type { LoginRequest, RegisterRequest, AuthResponse } from "../types/ApiTypes";
 
 export class AuthService {
   private apiClient: ApiClient;
@@ -18,6 +18,16 @@ export class AuthService {
   public async login(request: LoginRequest): Promise<AuthResponse> {
     const response = await this.apiClient.post<AuthResponse>("/auth/login", request);
     console.log("✅ Connexion réussie, token reçu dans le cookie");
+    return response;
+  }
+
+  /**
+   * Inscription d'un nouvel utilisateur
+   * POST /auth/register
+   */
+  public async register(request: RegisterRequest): Promise<AuthResponse> {
+    const response = await this.apiClient.post<AuthResponse>("/auth/register", request);
+    console.log("✅ Inscription réussie, token reçu dans le cookie");
     return response;
   }
 

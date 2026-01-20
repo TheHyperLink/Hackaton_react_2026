@@ -61,7 +61,7 @@ export class ApiClient {
     return response.json();
   }
 
-  public async put<T>(endpoint: string, data?: unknown): Promise<T> {
+  public async put<T>(endpoint: string, data?: unknown): Promise<T | void> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "PUT",
       headers: this.getHeaders(),
@@ -73,7 +73,18 @@ export class ApiClient {
       throw new Error(`PUT ${endpoint} failed with status ${response.status}`);
     }
 
-    return response.json();
+    // Gérer les réponses vides (204 No Content ou corps vide)
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return undefined;
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return undefined;
+    }
+
+    return JSON.parse(text);
   }
 
   public async delete<T>(endpoint: string): Promise<T | void> {

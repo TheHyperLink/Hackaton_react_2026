@@ -9,9 +9,10 @@ import { folderService, noteService } from "../../services"
 
 type FileTreeProps = {
   onNoteClick?: (note: NoteNode) => void;
+  onReloadRequest?: (reloadFn: () => Promise<void>) => void;
 };
 
-export function FileTree({ onNoteClick }: FileTreeProps) {
+export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
   const [folderList, setFolderList] = useState<FileNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,20 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
     isOpen: false,
     type: "createFolder",
   });
+
+  // Fonction pour recharger les dossiers
+  const reloadFolders = async () => {
+    try {
+      setError(null);
+      const response = await folderService.getFolders();
+      const folders = response.folders.map(folder => convertFolderDetailToFileNode(folder));
+      setFolderList(folders);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erreur lors du chargement des dossiers";
+      setError(errorMsg);
+      console.error("Erreur:", err);
+    }
+  };
 
   // Charger les dossiers au montage du composant
   useEffect(() => {
@@ -46,6 +61,13 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
 
     loadFolders();
   }, []);
+
+  // Exposer la fonction de rechargement au parent
+  useEffect(() => {
+    if (onReloadRequest) {
+      onReloadRequest(reloadFolders);
+    }
+  }, [onReloadRequest]);
 
   // Fonction de conversion FolderDetail -> FileNode
   const convertFolderDetailToFileNode = (folderDetail: any): FileNode => {

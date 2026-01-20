@@ -1,6 +1,13 @@
+import type { NoteNode } from "./NoteNode"
+
 export type FileNode = {
-  id: string
+  id: number
+  userId: number
   name: string
-  type: "folder" | "note"
-  children?: FileNode[]
+  color: string
+  parentFolderId: number | null
+  createdAt: string
+  updatedAt: string
+  notes?: NoteNode[]
+  subFolders?: FileNode[]
 }

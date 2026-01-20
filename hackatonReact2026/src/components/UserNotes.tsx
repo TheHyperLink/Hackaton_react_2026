@@ -26,7 +26,7 @@ useEffect(() => {
   return (
     <div className="flex min-h-dvh">
       {/* Panneau de gauche : FileTree */}
-      <FileTree />
+      <FileTree onNoteClick={(content) => setEditorContentMarkdown(content)} />
 
       {/* Panneau de droite : zone de notes */}
       <div className="flex-1 p-4 flex flex-col">

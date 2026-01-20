@@ -2,12 +2,17 @@ import "../../style/halloween-bg.css"
 
 
 
-const BAT_COUNT = 20;
+const BAT_COUNT = 40;
 const rnd = (a: number, b: number) => Math.random() * (b - a) + a;
 
 export default function HalloweenBackground() {
   return (
     <div className="halloween-bg">
+      
+      {/* Lune */}
+      <div className="moon" />
+
+      {/* Chauves-souris */}
       {Array.from({ length: BAT_COUNT }).map((_, i) => {
         const fromLeft = Math.random() < 0.5;
 

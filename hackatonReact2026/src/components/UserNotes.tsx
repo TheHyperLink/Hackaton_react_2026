@@ -1,28 +1,41 @@
-import { FileTree } from "./files_components/FileTree"
 
+import { FileTree } from "./files_components/FileTree"
+import TipTap from "./notes_components/TipTap"
 
 export default function UserNotes() {
   return (
     <div className="flex min-h-dvh">
-       <FileTree></FileTree>
-        <div className="flex-1 p-4 ">
-            <h2 className="text-2xl font-bold mb-4">User Notes</h2>
-            <textarea
-                className="w-full h-48 p-2 border border-orange-500/25 rounded focus:border-orange-400"
-                placeholder="Write your notes here..."
-                defaultValue={`What is Lorem Ipsum?
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+      {/* Panneau de gauche : FileTree */}
+      <FileTree />
 
-                        Why do we use it?
-                        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+      {/* Panneau de droite : zone de notes */}
+      <div className="flex-1 p-4 flex flex-col">
+        {/* Barre en haut : titre + boutons */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Notepad</h2>
 
+          <div className="flex gap-2">
+            <button className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer">
+              Bouton 1
+            </button>
+            <button className="px-3 py-1 rounded bg-orange-600 hover:bg-orange-500 text-sm hover:cursor-pointer">
+              <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10V4a1 1 0 0 0-1-1H9.914a1 1 0 0 0-.707.293L5.293 7.207A1 1 0 0 0 5 7.914V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2M10 3v4a1 1 0 0 1-1 1H5m5 6h9m0 0-2-2m2 2-2 2"/>
+              </svg>
 
-                        Where does it come from?
-                        Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
-
-                        The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.`}
-            ></textarea>
+            </button>
+          </div>
         </div>
+
+        
+      <div className="min-h-dvh flex flex-col text-white">  
+
+        {/* Zone éditeur (prend tout le reste) */}
+        <div className="flex-1 p-4 overflow-hidden">
+          <TipTap />
+        </div>
+      </div>
+      </div>
     </div>
   )
 }

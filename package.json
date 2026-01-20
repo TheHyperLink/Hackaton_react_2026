@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.4",
+    "@tiptap/extension-table": "^3.15.3",
+    "@tiptap/extension-table-cell": "^3.15.3",
+    "@tiptap/extension-table-header": "^3.15.3",
+    "@tiptap/extension-table-row": "^3.15.3"
+  }
+}

@@ -24,7 +24,8 @@ export function FileItem({ node, depth = 0 }: FileNodeProps) {
           text-left
           hover:bg-violet-800/30
           hover:text-orange-400
-          ${isFolder ? "font-medium" : "text-gray-300"}
+          hover:cursor-pointer
+          ${isFolder ? "font-medium" : "text-yellow-500"}
         `}
       >
         {isFolder ? (

@@ -12,7 +12,7 @@
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background: radial-gradient(120vh 80vh at 50% 120%, #fe5500, #2d1043 90%);
+  background: radial-gradient(120vh 80vh at 50% 120%, #fe5500, #1b0a28 90%);
 }
 
 /* --- Wrapper d'une chauve-souris (trajectoire + profondeur) --- */
@@ -80,6 +80,36 @@
   50% {
     transform: rotate(14deg); /* angle à ajuster pour ouvrir/fermer davantage */
   }
+}
+
+/*scrollbar*/
+.scroller {
+  scrollbar-width: thin;
+}
+
+
+
+
+/* === LUNE === */
+.moon {
+  position: absolute;
+  top: -3rem;
+  right: 4rem;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    #fef9c3,
+    #fde68a 40%,
+    #facc15 65%
+  );
+  box-shadow:
+    0 0 60px rgba(250, 204, 21, 0.4),
+    0 0 120px rgba(250, 204, 21, 0.2);
+
+  z-index: -2;
+  pointer-events: none;
 }
 
 /* (Optionnel) Si tu veux un battement asymétrique pour + de naturel :

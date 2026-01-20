@@ -1,11 +1,13 @@
 import type {FileNode} from "../../types/FileNode"
-import { FileItem } from "./files"
+import { FileManager } from "./FileManager"
+import { FileItem } from "./Files"
 
 
 export function FileTree() {
     return (
         
         <div className="w-1/4 border-4 border-orange-500/25 rounded-2xl overflow-hidden">
+          <FileManager />
             {data.map(node => (
                 <FileItem key={node.id} node={node} />
             ))}

@@ -9,72 +9,73 @@ import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
 import { useEffect } from "react"
 
+import CtrlEnterMarkdown from "./CtrlEnterMarkdown"
+
+import {
+  registerEditor,
+  unregisterEditor,
+} from "../../services/TipTapServices"
 
 type TiptapProps = {
-  editable?: boolean; // optionnelle, par défaut: true
+  editable?: boolean
 }
-
 
 export default function Tiptap({ editable = true }: TiptapProps) {
   const editor = useEditor({
     extensions: [
+      // ✅ StarterKit allégé (Markdown gère les listes)
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
       }),
+
+      // ✅ Markdown natif
       Markdown.configure({
-        // options officielles (facultatives)
-        indentation: { style: 'space', size: 2 },
+        indentation: { style: "space", size: 2 },
       }),
-      Link.configure({ autolink: true, openOnClick: false }),
+
+      // ✅ Ctrl + Enter = reparse Markdown
+      CtrlEnterMarkdown,
+
+      Link.configure({
+        autolink: true,
+        openOnClick: false,
+      }),
+
       Underline,
+
       TaskList,
       TaskItem.configure({ nested: true }),
-      TableKit.configure({ table: { resizable: true } }),
+
+      TableKit.configure({
+        table: { resizable: true },
+      }),
     ],
 
     contentType: "markdown",
-    content: `Default`,
-
-    /**
-     * 🔽 Coller du Markdown → parse → insère en tant que nodes
-     */
-    editorProps: {
-      handlePaste(view, event) {
-        const clipboardText = event.clipboardData?.getData("text/plain") ?? ""
-        if (!clipboardText) return false
-
-        // 1) Heuristique simple : repère un tableau Markdown
-        const looksLikeMdTable =
-          /^\s*\|.+\|\s*$/m.test(clipboardText) && // une ligne avec des |
-          /^\s*\|(?:\s*-+\s*\|)+\s*$/m.test(clipboardText) // ligne de séparateurs |---|
-
-        // élargis si tu veux : titres (# ), listes (- ), etc.
-        if (!looksLikeMdTable) return false
-
-        // 2) Convertit Markdown -> JSON Tiptap via l’extension officielle
-        //    (API v3 : editor.markdown.parse)
-        // @ts-ignore - l'API markdown est ajoutée par l'extension
-        const json = editor?.markdown?.parse?.(clipboardText)
-        if (!json) return false
-
-        // 3) Insère le contenu au niveau de la sélection
-        editor?.chain().focus().insertContent(json).run()
-
-        // Empêche le collage par défaut (texte brut)
-        event.preventDefault()
-        return true
-      },
-    },
+    content: "Default",
   })
 
-  
-useEffect(() => {
-    editor?.setEditable(editable)
-}, [editable, editor])
+  // ✅ Enregistrement service
+  useEffect(() => {
+    if (!editor) return
+    registerEditor(editor)
+    return () => unregisterEditor()
+  }, [editor])
 
-  
-return (
-    <div className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${editable ? "" : "cursor-not-allowed"}`}>
+  // ✅ Lecture seule / édition
+  useEffect(() => {
+    editor?.setEditable(editable)
+  }, [editable, editor])
+
+  return (
+    <div
+      className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${
+        editable ? "" : "cursor-not-allowed"
+      }`}
+    >
       <EditorContent
         editor={editor}
         className="
@@ -82,10 +83,10 @@ return (
           overflow-auto
           p-4
           text-white
+          outline-none
           [&_.ProseMirror]:h-full
         "
       />
     </div>
   )
-
 }

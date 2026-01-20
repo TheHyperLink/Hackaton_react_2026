@@ -1,36 +1,59 @@
-
 import { useEffect, useState } from "react"
 import { FileTree } from "./files_components/FileTree"
 import TipTap from "./notes_components/TipTap"
 import { setEditorContentMarkdown, getEditorContentMarkdown } from "./../services/TipTapServices"
-import type { NoteNode } from "../types/NoteNode"   // ✅ à ajouter
+import type { NoteNode } from "../types/NoteNode"
+import { noteService } from "../services"
 
 export default function UserNotes() {
   const [isEditable, setIsEditable] = useState(true)
   const [markdown, setMarkdown] = useState<string>("")
+  const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle")
 
-  // ✅ Nouveau state : titre de la note sélectionnée
-  const [selectedNoteTitle, setSelectedNoteTitle] = useState<string>("")
+  async function handleSave() {
+    if (!selectedNote) {
+      alert("Veuillez sélectionner une note")
+      return
+    }
 
-  function handleSave() {
     const content = getEditorContentMarkdown()
     if (!content) return
-    setMarkdown(content)
+
+    try {
+      setSaving(true)
+      setSaveStatus("idle")
+
+      await noteService.updateNote({
+        id: selectedNote.id,
+        title: selectedNote.title,
+        content: content,
+      })
+
+      setMarkdown(content)
+      setSaveStatus("saved")
+      setTimeout(() => setSaveStatus("idle"), 2000)
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error)
+      setSaveStatus("error")
+      setTimeout(() => setSaveStatus("idle"), 2000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   useEffect(() => {
     if (markdown === "") return
-    console.log(markdown)
+    console.log("Contenu modifié:", markdown)
   }, [markdown])
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex min-h-dvh w-full">
       {/* Panneau de gauche : FileTree */}
       <FileTree
         onNoteClick={(note: NoteNode) => {
-          // ✅ On met à jour le titre affiché
-          setSelectedNoteTitle(note.title)
-          // ✅ On met le contenu dans l'éditeur
+          setSelectedNote(note)
           setEditorContentMarkdown(note.content)
         }}
       />
@@ -47,17 +70,25 @@ export default function UserNotes() {
             Notepad en mode {isEditable ? "édition" : "lecture seule"}
           </h2>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {saveStatus === "saved" && (
+              <span className="text-green-400 text-sm">✅ Sauvegardé</span>
+            )}
+            {saveStatus === "error" && (
+              <span className="text-red-400 text-sm">❌ Erreur</span>
+            )}
+
             <button
               className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer"
-              onClick={() => setIsEditable((v) => !v)}
+              onClick={() => setIsEditable((v: boolean) => !v)}
             >
               {isEditable ? "Lecture seule" : "Édition"}
             </button>
 
             <button
-              className="px-3 py-1 rounded bg-orange-600 hover:bg-orange-500 text-sm hover:cursor-pointer"
-              onClick={() => { handleSave() }}
+              className="px-3 py-1 rounded bg-orange-600 hover:bg-orange-500 text-sm hover:cursor-pointer disabled:opacity-50"
+              onClick={handleSave}
+              disabled={saving || !selectedNote}
             >
               <svg
                 className="w-6 h-6 text-gray-800 dark:text-white"
@@ -81,13 +112,12 @@ export default function UserNotes() {
         </div>
 
         {/* Conteneur principal du contenu */}
-        <div className="min-h-dvh flex flex-col text-white">
-          
-          {/* ✅ Titre de la note sélectionnée */}
+        <div className="flex-1 flex flex-col text-white">
+          {/* Titre de la note sélectionnée */}
           <div className="px-4 pb-2 border-b border-orange-500/40">
-            {selectedNoteTitle ? (
+            {selectedNote ? (
               <h3 className="text-xl font-semibold text-orange-300">
-                {selectedNoteTitle}
+                {selectedNote.title}
               </h3>
             ) : (
               <span className="text-sm text-gray-400">

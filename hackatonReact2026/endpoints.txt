@@ -1,0 +1,383 @@
+✅ Liste complète et finale de tous les endpoints de l'API
+📝 Notes
+Query
+
+GET /notes/{id} — Récupérer une note par ID
+input : id (long)
+output:
+{
+  "id": 0,
+  "title": "string",
+  "content": "string",
+  "sizeBytes": 0,
+  "lineCount": 0,
+  "wordCount": 0,
+  "charCount": 0,
+  "internalLinks": [
+    0
+  ],
+  "externalLinks": [
+    "string"
+  ]
+}
+
+GET /notes — Lister toutes les notes de l’utilisateur authentifié
+input : folderId (long), search (long)
+output:
+{
+  "notes": [
+    {
+      "id": 0,
+      "userId": 0,
+      "folderId": 0,
+      "title": "string",
+      "content": "string",
+      "createdAt": "2026-01-20T11:49:17.068Z",
+      "updatedAt": "2026-01-20T11:49:17.068Z",
+      "internalLinks": [
+        {
+          "noteId": 0,
+          "targetNoteId": 0
+        }
+      ],
+      "externalLinks": [
+        {
+          "id": 0,
+          "noteId": 0,
+          "url": "string"
+        }
+      ]
+    }
+  ]
+}
+
+Command
+
+POST /notes — Créer une nouvelle note
+input : 
+{
+  "folderId": 0,
+  "title": "string",
+  "content": "string"
+}
+output : 
+{
+  "id": 0,
+  "userId": 0,
+  "folderId": 0,
+  "title": "string",
+  "content": "string",
+  "createdAt": "2026-01-20T11:46:53.461Z",
+  "updatedAt": "2026-01-20T11:46:53.461Z",
+  "internalLinks": [
+    {
+      "noteId": 0,
+      "targetNoteId": 0
+    }
+  ],
+  "externalLinks": [
+    {
+      "id": 0,
+      "noteId": 0,
+      "url": "string"
+    }
+  ]
+}
+
+PUT /notes/{id} — Mettre à jour une note
+input :
+{
+  "id": 0,
+  "title": "string",
+  "content": "string"
+}
+output: /
+
+DELETE /notes/{id} — Supprimer une note
+input : id (long)
+output: /
+
+
+📁 Folders (Dossiers)
+Query
+
+GET /folders/{id} — Récupérer un dossier par ID
+input : id (long)
+output:
+{
+  "folder": {
+    "id": 0,
+    "userId": 0,
+    "name": "string",
+    "color": "string",
+    "parentFolderId": 0,
+    "createdAt": "2026-01-20T11:50:26.651Z",
+    "updatedAt": "2026-01-20T11:50:26.651Z",
+    "subFolders": [
+      "string"
+    ],
+    "notes": [
+      {
+        "id": 0,
+        "userId": 0,
+        "folderId": 0,
+        "title": "string",
+        "content": "string",
+        "createdAt": "2026-01-20T11:50:26.655Z",
+        "updatedAt": "2026-01-20T11:50:26.655Z",
+        "internalLinks": [
+          {
+            "noteId": 0,
+            "targetNoteId": 0
+          }
+        ],
+        "externalLinks": [
+          {
+            "id": 0,
+            "noteId": 0,
+            "url": "string"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+GET /folders — Lister tous les dossiers de l’utilisateur authentifié
+input : /
+output:
+{
+  "folders": [
+    {
+      "id": 0,
+      "userId": 0,
+      "name": "string",
+      "color": "string",
+      "parentFolderId": 0,
+      "createdAt": "2026-01-20T11:51:48.634Z",
+      "updatedAt": "2026-01-20T11:51:48.634Z",
+      "subFolders": [
+        "string"
+      ],
+      "notes": [
+        {
+          "id": 0,
+          "userId": 0,
+          "folderId": 0,
+          "title": "string",
+          "content": "string",
+          "createdAt": "2026-01-20T11:51:48.635Z",
+          "updatedAt": "2026-01-20T11:51:48.635Z",
+          "internalLinks": [
+            {
+              "noteId": 0,
+              "targetNoteId": 0
+            }
+          ],
+          "externalLinks": [
+            {
+              "id": 0,
+              "noteId": 0,
+              "url": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Command
+
+POST /folders — Ajouter un nouveau dossier
+input : 
+{
+  "name": "string",
+  "color": "string",
+  "parentFolderId": 0
+}
+output:
+{
+  "id": 0,
+  "userId": 0,
+  "name": "string",
+  "color": "string",
+  "parentFolderId": 0,
+  "createdAt": "2026-01-20T11:53:09.681Z",
+  "updatedAt": "2026-01-20T11:53:09.681Z",
+  "subFolders": [
+    "string"
+  ],
+  "notes": [
+    {
+      "id": 0,
+      "userId": 0,
+      "folderId": 0,
+      "title": "string",
+      "content": "string",
+      "createdAt": "2026-01-20T11:53:09.681Z",
+      "updatedAt": "2026-01-20T11:53:09.681Z",
+      "internalLinks": [
+        {
+          "noteId": 0,
+          "targetNoteId": 0
+        }
+      ],
+      "externalLinks": [
+        {
+          "id": 0,
+          "noteId": 0,
+          "url": "string"
+        }
+      ]
+    }
+  ]
+}
+
+PUT /folders/{id} — Mettre à jour un dossier
+input :
+{
+  "id": 0,
+  "name": "string",
+  "color": "string",
+  "parentFolderId": 0
+}
+output:
+{
+  "id": 0,
+  "userId": 0,
+  "name": "string",
+  "color": "string",
+  "parentFolderId": 0,
+  "createdAt": "2026-01-20T11:54:12.264Z",
+  "updatedAt": "2026-01-20T11:54:12.264Z",
+  "subFolders": [
+    "string"
+  ],
+  "notes": [
+    {
+      "id": 0,
+      "userId": 0,
+      "folderId": 0,
+      "title": "string",
+      "content": "string",
+      "createdAt": "2026-01-20T11:54:12.264Z",
+      "updatedAt": "2026-01-20T11:54:12.264Z",
+      "internalLinks": [
+        {
+          "noteId": 0,
+          "targetNoteId": 0
+        }
+      ],
+      "externalLinks": [
+        {
+          "id": 0,
+          "noteId": 0,
+          "url": "string"
+        }
+      ]
+    }
+  ]
+}
+
+DELETE /folders/{id} — Supprimer un dossier
+input : id(long)
+output:
+{
+  "type": "string",
+  "title": "string",
+  "status": 0,
+  "detail": "string",
+  "instance": "string",
+  "properties": {
+    "additionalProp1": {},
+    "additionalProp2": {},
+    "additionalProp3": {}
+  }
+}
+
+👤 Users
+Query
+
+GET /users/{id} — Rechercher un utilisateur par ID
+input : id (long)
+output:
+{
+  "id": 0,
+  "username": "string",
+  "email": "string",
+  "createdAt": "2026-01-20T11:57:54.396Z",
+  "updatedAt": "2026-01-20T11:57:54.396Z"
+}
+
+
+GET /users/me — Récupérer les informations de l’utilisateur authentifié
+input : /
+output:
+{
+  "id": 0,
+  "username": "string",
+  "email": "string",
+  "passwordHash": "string",
+  "createdAt": "2026-01-20T11:58:24.142Z",
+  "updatedAt": "2026-01-20T11:58:24.142Z"
+}
+
+Command
+
+POST /users — Ajouter un nouvel utilisateur
+input :
+{
+  "username": "string",
+  "email": "string",
+  "passwordHash": "string"
+}
+output:
+{
+  "id": 0,
+  "username": "string",
+  "email": "string",
+  "passwordHash": "string",
+  "createdAt": "2026-01-20T11:56:16.238Z",
+  "updatedAt": "2026-01-20T11:56:16.238Z"
+}
+
+DELETE /users/{id} — Supprimer un utilisateur
+input : id (long)
+output:
+{
+  "type": "string",
+  "title": "string",
+  "status": 0,
+  "detail": "string",
+  "instance": "string",
+  "properties": {
+    "additionalProp1": {},
+    "additionalProp2": {},
+    "additionalProp3": {}
+  }
+}
+
+
+🔐 Authentication
+
+POST /auth/login — Connexion
+input :
+{
+  "email": "string",
+  "password": "string"
+}
+output:
+{
+  "additionalProp1": "string",
+  "additionalProp2": "string",
+  "additionalProp3": "string"
+}
+POST /auth/logout — Déconnexion
+input : /
+output:
+{
+  "additionalProp1": "string",
+  "additionalProp2": "string",
+  "additionalProp3": "string"
+}

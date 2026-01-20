@@ -7,8 +7,15 @@ import Underline from "@tiptap/extension-underline"
 import { TableKit } from "@tiptap/extension-table"
 import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
+import { useEffect } from "react"
 
-export default function Tiptap() {
+
+type TiptapProps = {
+  editable?: boolean; // optionnelle, par défaut: true
+}
+
+
+export default function Tiptap({ editable = true }: TiptapProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -61,8 +68,13 @@ export default function Tiptap() {
   })
 
   
+useEffect(() => {
+    editor?.setEditable(editable)
+}, [editable, editor])
+
+  
 return (
-    <div className="h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ">
+    <div className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${editable ? "" : "cursor-not-allowed"}`}>
       <EditorContent
         editor={editor}
         className="

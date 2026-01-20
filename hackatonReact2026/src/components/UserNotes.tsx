@@ -1,8 +1,11 @@
 
+import { useState } from "react"
 import { FileTree } from "./files_components/FileTree"
 import TipTap from "./notes_components/TipTap"
 
 export default function UserNotes() {
+  const [isEditable, setIsEditable] = useState(true)
+
   return (
     <div className="flex min-h-dvh">
       {/* Panneau de gauche : FileTree */}
@@ -12,11 +15,12 @@ export default function UserNotes() {
       <div className="flex-1 p-4 flex flex-col">
         {/* Barre en haut : titre + boutons */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Notepad</h2>
+          <h2 className={`text-2xl font-bold ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>Notepad en mode {isEditable ? "édition" : "lecture seule"}</h2>
 
           <div className="flex gap-2">
-            <button className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer">
-              Bouton 1
+            <button className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer" 
+            onClick={() => setIsEditable((v) => !v)}>
+              {isEditable ? "Lecture seule" : "Édition"}
             </button>
             <button className="px-3 py-1 rounded bg-orange-600 hover:bg-orange-500 text-sm hover:cursor-pointer">
               <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -32,7 +36,7 @@ export default function UserNotes() {
 
         {/* Zone éditeur (prend tout le reste) */}
         <div className="flex-1 p-4 overflow-hidden">
-          <TipTap />
+          <TipTap editable={isEditable} />
         </div>
       </div>
       </div>

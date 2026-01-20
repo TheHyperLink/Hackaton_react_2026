@@ -155,6 +155,7 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
     type: "createFolder" | "createNote";
+    defaultColor?: string;
   }>({
     isOpen: false,
     type: "createFolder",
@@ -174,16 +175,26 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
         setDialogState({
           isOpen: true,
           type: "createFolder",
+          defaultColor: "yellow",
+        }),
+    },
+    {
+      label: "Créer une note à la racine",
+      icon: "🗒️",
+      action: () =>
+        setDialogState({
+          isOpen: true,
+          type: "createNote",
         }),
     },
   ];
 
-  const handleCreateFolder = (parentFolderId: number, name: string) => {
+  const handleCreateFolder = (parentFolderId: number, name: string, color: string = "yellow") => {
     const newFolder: FileNode = {
       id: Math.max(...folderList.flatMap(f => [f.id, ...(f.subFolders?.map(s => s.id) ?? [])]), 0) + 1,
       userId: 1,
       name,
-      color: "yellow",
+      color,
       parentFolderId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -249,12 +260,17 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
     });
   };
 
-  const handleRenameFolder = (folderId: number, newName: string) => {
+  const handleRenameFolder = (folderId: number, newName: string, newColor?: string) => {
     const renameSubfolder = (subFolders: FileNode[] | undefined): FileNode[] | undefined => {
       if (!subFolders) return subFolders;
       return subFolders.map(sub =>
         sub.id === folderId
-          ? { ...sub, name: newName, subFolders: renameSubfolder(sub.subFolders) }
+          ? { 
+              ...sub, 
+              name: newName,
+              color: newColor || sub.color,
+              subFolders: renameSubfolder(sub.subFolders) 
+            }
           : { ...sub, subFolders: renameSubfolder(sub.subFolders) }
       );
     };
@@ -262,7 +278,7 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
     setFolderList(prevFolders =>
       prevFolders.map(folder =>
         folder.id === folderId
-          ? { ...folder, name: newName }
+          ? { ...folder, name: newName, color: newColor || folder.color }
           : { ...folder, subFolders: renameSubfolder(folder.subFolders) }
       )
     );
@@ -315,7 +331,7 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
     );
   };
 
-  const handleDialogConfirm = (value: string) => {
+  const handleDialogConfirm = (value: string, color?: string) => {
     const { type } = dialogState;
     const rootFolderId = folderList[0]?.id;
 
@@ -327,7 +343,7 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
             id: Math.max(...folderList.flatMap(f => [f.id, ...(f.subFolders?.map(s => s.id) ?? [])]), 0) + 1,
             userId: 1,
             name: value,
-            color: "yellow",
+            color: color || "yellow",
             parentFolderId: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -384,6 +400,8 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
             ? "Nom du dossier"
             : "Titre de la note"
         }
+        defaultColor={(dialogState.defaultColor as "red" | "yellow" | "green" | "purple" | "pink") || "yellow"}
+        isFolderDialog={dialogState.type === "createFolder"}
         onConfirm={handleDialogConfirm}
         onCancel={() =>
           setDialogState({ isOpen: false, type: "createFolder" })

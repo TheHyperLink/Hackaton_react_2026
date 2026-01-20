@@ -71,6 +71,49 @@
   color: #7c6f6f;
 }
 
+.color-picker {
+  margin-bottom: 16px;
+}
+
+.color-picker label {
+  display: block;
+  color: #fbbf24;
+  font-size: 13px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.color-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 40px;
+  height: 40px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.color-option:hover {
+  border-color: #fbbf24;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.color-option.selected {
+  border-color: white;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.8), inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
 .input-dialog-actions {
   display: flex;
   gap: 10px;

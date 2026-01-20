@@ -9,9 +9,9 @@ type FileItemProps = {
   node: FileNode;
   depth?: number;
   onNoteClick?: (note: NoteNode) => void;
-  onCreateFolder?: (parentFolderId: number, name: string) => void;
+  onCreateFolder?: (parentFolderId: number, name: string, color: string) => void;
   onCreateNote?: (folderId: number, title: string) => void;
-  onRenameFolder?: (folderId: number, newName: string) => void;
+  onRenameFolder?: (folderId: number, newName: string, newColor?: string) => void;
   onRenameNote?: (noteId: number, newTitle: string) => void;
   onDeleteFolder?: (folderId: number) => void;
   onDeleteNote?: (noteId: number) => void;
@@ -40,6 +40,7 @@ export function FileItem({
     type: "createFolder" | "createNote" | "renameFolder" | "renameNote";
     targetId?: number;
     defaultValue?: string;
+    defaultColor?: string;
   }>({
     isOpen: false,
     type: "createFolder",
@@ -60,6 +61,7 @@ export function FileItem({
           isOpen: true,
           type: "createFolder",
           targetId: node.id,
+          defaultColor: "yellow",
         }),
     },
     {
@@ -73,7 +75,7 @@ export function FileItem({
         }),
     },
     {
-      label: "Renommer le dossier",
+      label: "Modifier le dossier",
       icon: "✏️",
       action: () =>
         setDialogState({
@@ -81,6 +83,7 @@ export function FileItem({
           type: "renameFolder",
           targetId: node.id,
           defaultValue: node.name,
+          defaultColor: node.color,
         }),
     },
     {
@@ -119,12 +122,12 @@ export function FileItem({
     },
   ];
 
-  const handleDialogConfirm = (value: string) => {
+  const handleDialogConfirm = (value: string, color?: string) => {
     const { type, targetId } = dialogState;
     switch (type) {
       case "createFolder":
         if (targetId !== undefined) {
-          onCreateFolder?.(targetId, value);
+          onCreateFolder?.(targetId, value, color || "yellow");
         }
         break;
       case "createNote":
@@ -134,7 +137,7 @@ export function FileItem({
         break;
       case "renameFolder":
         if (targetId !== undefined) {
-          onRenameFolder?.(targetId, value);
+          onRenameFolder?.(targetId, value, color);
         }
         break;
       case "renameNote":
@@ -253,7 +256,7 @@ export function FileItem({
             : dialogState.type === "createNote"
             ? "Créer une nouvelle note"
             : dialogState.type === "renameFolder"
-            ? "Renommer le dossier"
+            ? "Modifier le dossier"
             : "Renommer la note"
         }
         placeholder={
@@ -262,6 +265,8 @@ export function FileItem({
             : "Titre de la note"
         }
         defaultValue={dialogState.defaultValue || ""}
+        defaultColor={(dialogState.defaultColor as "red" | "yellow" | "green" | "purple" | "pink") || "yellow"}
+        isFolderDialog={dialogState.type === "createFolder" || dialogState.type === "renameFolder"}
         onConfirm={handleDialogConfirm}
         onCancel={() =>
           setDialogState({ isOpen: false, type: "createFolder" })

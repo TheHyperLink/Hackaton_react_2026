@@ -1,14 +1,37 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../../style/InputDialog.css";
 
+type FolderColor = "red" | "yellow" | "green" | "purple" | "pink";
+
 type InputDialogProps = {
   isOpen: boolean;
   title: string;
   placeholder?: string;
   defaultValue?: string;
-  onConfirm: (value: string) => void;
+  defaultColor?: FolderColor;
+  onConfirm: (value: string, color?: FolderColor) => void;
   onCancel: () => void;
   type?: "create" | "rename";
+  isFolderDialog?: boolean;
+};
+
+const FOLDER_COLORS: { color: FolderColor; label: string }[] = [
+  { color: "yellow", label: "Jaune" },
+  { color: "red", label: "Rouge" },
+  { color: "green", label: "Vert" },
+  { color: "purple", label: "Violet" },
+  { color: "pink", label: "Rose" },
+];
+
+const getColorValue = (color: FolderColor): string => {
+  const colorMap: Record<FolderColor, string> = {
+    yellow: "#fbbf24",
+    red: "#ef4444",
+    green: "#22c55e",
+    purple: "#a855f7",
+    pink: "#ec4899",
+  };
+  return colorMap[color];
 };
 
 export function InputDialog({
@@ -16,15 +39,19 @@ export function InputDialog({
   title,
   placeholder,
   defaultValue = "",
+  defaultColor = "yellow",
   onConfirm,
   onCancel,
   type = "create",
+  isFolderDialog = false,
 }: InputDialogProps) {
   const [value, setValue] = useState(defaultValue);
+  const [selectedColor, setSelectedColor] = useState<FolderColor>(defaultColor);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setValue(defaultValue);
+    setSelectedColor(defaultColor);
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 0);
       if (type === "rename" && defaultValue) {
@@ -37,11 +64,15 @@ export function InputDialog({
         }
       }
     }
-  }, [isOpen, defaultValue, type]);
+  }, [isOpen, defaultValue, defaultColor, type]);
 
   const handleConfirm = () => {
     if (value.trim()) {
-      onConfirm(value);
+      if (isFolderDialog) {
+        onConfirm(value, selectedColor);
+      } else {
+        onConfirm(value);
+      }
       setValue("");
     }
   };
@@ -69,6 +100,25 @@ export function InputDialog({
           placeholder={placeholder}
           className="input-field"
         />
+
+        {/* Sélecteur de couleur pour les dossiers */}
+        {isFolderDialog && (
+          <div className="color-picker">
+            <label>Couleur du dossier :</label>
+            <div className="color-options">
+              {FOLDER_COLORS.map(({ color, label }) => (
+                <button
+                  key={color}
+                  className={`color-option ${selectedColor === color ? "selected" : ""}`}
+                  onClick={() => setSelectedColor(color)}
+                  title={label}
+                  style={{ backgroundColor: getColorValue(color) }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="input-dialog-actions">
           <button onClick={handleConfirm} className="btn-confirm">
             Confirmer

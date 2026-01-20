@@ -10,9 +10,11 @@ import { FileItem } from "./Files"
 
 // Exemple complet et profond pour tests
 
+
 type FileTreeProps = {
-  onNoteClick?: (content: string) => void;
+  onNoteClick?: (note: NoteNode) => void;
 };
+
 
 const folders: FileNode[] = [
   {

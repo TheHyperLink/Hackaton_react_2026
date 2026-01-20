@@ -2,7 +2,7 @@ import "../../style/halloween-bg.css"
 
 
 
-const BAT_COUNT = 40;
+const BAT_COUNT = 15;
 const rnd = (a: number, b: number) => Math.random() * (b - a) + a;
 
 export default function HalloweenBackground() {

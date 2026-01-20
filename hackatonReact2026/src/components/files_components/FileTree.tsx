@@ -1,7 +1,6 @@
 
 import type { FileNode } from "../../types/FileNode"
 import type { NoteNode } from "../../types/NoteNode"
-import { FileManager } from "./FileManager"
 import { FileItem } from "./Files"
 import { ContextMenu, type MenuItem } from "./ContextMenu"
 import { InputDialog } from "./InputDialog"
@@ -348,7 +347,6 @@ export function FileTree({ onNoteClick }: FileTreeProps) {
   return (
     <>
       <div className="w-1/4 border-4 border-orange-500/25 rounded-2xl overflow-hidden" onContextMenu={handleRootContextMenu}>
-        <FileManager />
         {folderList.map(folder => (
           <FileItem
             key={folder.id}

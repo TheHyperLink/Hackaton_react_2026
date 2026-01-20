@@ -26,7 +26,7 @@ export class AuthService {
    * POST /auth/register
    */
   public async register(request: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.apiClient.post<AuthResponse>("/auth/register", request);
+    const response = await this.apiClient.post<AuthResponse>("/users", request);
     console.log("✅ Inscription réussie, token reçu dans le cookie");
     return response;
   }

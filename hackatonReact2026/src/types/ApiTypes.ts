@@ -114,7 +114,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   username: string;
-  password: string;
+  passwordHash: string;
 }
 
 export interface AuthResponse {

@@ -9,7 +9,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [loginError, setLoginError] = useState("")
   const [isRegistering, setIsRegistering] = useState(false)
-  const [credentials, setCredentials] = useState({ email: "", password: "", username: "" })
+  const [credentials, setCredentials] = useState({ email: "", passwordHash: "", username: "" })
+  const [credentialsLogin, setCredentialsLogin] = useState({ email: "", password: "", username: "" })
 
   // Vérifier si un cookie JWT existe déjà
   useEffect(() => {
@@ -24,16 +25,16 @@ function App() {
     e.preventDefault()
     setLoginError("")
     
-    if (!credentials.email || !credentials.password) {
+    if (!credentials.email || !credentials.passwordHash) {
       setLoginError("Veuillez remplir tous les champs")
       return
     }
 
     try {
       setLoading(true)
-      await authService.login(credentials)
+      await authService.login(credentialsLogin)
       setIsLoggedIn(true)
-      setCredentials({ email: "", password: "", username: "" })
+      setCredentialsLogin({ email: "", password: "", username: "" })
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Erreur de connexion")
     } finally {
@@ -45,13 +46,13 @@ function App() {
     e.preventDefault()
     setLoginError("")
     
-    if (!credentials.email || !credentials.password || !credentials.username) {
+    if (!credentialsLogin.email || !credentialsLogin.password || !credentialsLogin.username) {
       setLoginError("Veuillez remplir tous les champs")
       return
     }
 
-    if (credentials.password.length < 6) {
-      setLoginError("Le mot de passe doit contenir au moins 6 caractères")
+    if (credentialsLogin.password.length < 8) {
+      setLoginError("Le mot de passe doit contenir au moins 8 caractères")
       return
     }
 
@@ -59,7 +60,7 @@ function App() {
       setLoading(true)
       await authService.register(credentials)
       setIsLoggedIn(true)
-      setCredentials({ email: "", password: "", username: "" })
+      setCredentials({ email: "", passwordHash: "", username: "" })
       setIsRegistering(false)
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Erreur lors de l'inscription")
@@ -71,7 +72,7 @@ function App() {
   const handleLogout = () => {
     authService.logout()
     setIsLoggedIn(false)
-    setCredentials({ email: "", password: "", username: "" })
+    setCredentialsLogin({ email: "", password: "", username: "" })
   }
 
   if (loading) {
@@ -136,8 +137,8 @@ function App() {
                 </label>
                 <input
                   type="password"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  value={credentials.passwordHash}
+                  onChange={(e) => setCredentials({ ...credentials, passwordHash: e.target.value })}
                   placeholder="••••••••"
                   className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
                 />
@@ -162,7 +163,7 @@ function App() {
                 onClick={() => {
                   setIsRegistering(!isRegistering)
                   setLoginError("")
-                  setCredentials({ email: "", password: "", username: "" })
+                  setCredentials({ email: "", passwordHash: "", username: "" })
                 }}
                 className="w-full px-4 py-2 text-sm text-gray-300 hover:text-orange-400 transition-colors"
               >

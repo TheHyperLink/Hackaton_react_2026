@@ -1,5 +1,5 @@
 import React from "react";
-import "./ContextMenu.css";
+import "../../style/ContextMenu.css";
 
 export type MenuItem = {
   label: string;

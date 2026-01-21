@@ -38,45 +38,71 @@ export default function UserNotes() {
     loadNoteContent()
   }, [selectedNote?.id])
 
-  // Fonction de sauvegarde
-  const autoSave = async () => {
-    if (!selectedNote || !isEditable || !isModifiedRef.current) {
-      return
-    }
 
-    const content = getEditorContentMarkdown()
-    if (!content) return
-
-    try {
-      setSaving(true)
-      setSaveStatus("saving")
-
-      await noteService.updateNote({
-        id: selectedNote.id,
-        title: selectedNote.title,
-        content: content,
-      })
-
-      // Mettre à jour le state selectedNote avec le nouveau contenu
-      setSelectedNote(prev => prev ? { ...prev, content } : null)
-      setLastSavedContent(content)
-      isModifiedRef.current = false
-      
-      // Recharger les dossiers et notes en temps réel
-      if (reloadFoldersRef.current) {
-        await reloadFoldersRef.current()
-      }
-      
-      setSaveStatus("saved")
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde automatique:", error)
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus("idle"), 3000)
-    } finally {
-      setSaving(false)
-    }
+// Fonction de sauvegarde
+const autoSave = async () => {
+  if (!selectedNote || !isEditable || !isModifiedRef.current) {
+    return
   }
+
+  const content = getEditorContentMarkdown()
+  if (!content) return
+
+  // 💬 1) Log avant la sauvegarde (ce qu'on envoie à l'API)
+  console.log(
+    "%c[AutoSave] Contenu à sauvegarder",
+    "color: orange; font-weight: bold;",
+    {
+      noteId: selectedNote.id,
+      title: selectedNote.title,
+      contentPreview: content.slice(0, 120) + (content.length > 120 ? "..." : ""),
+      fullContent: content,
+    }
+  )
+
+  try {
+    setSaving(true)
+    setSaveStatus("saving")
+
+    await noteService.updateNote({
+      id: selectedNote.id,
+      title: selectedNote.title,
+      content: content,
+    })
+
+    // Mettre à jour le state selectedNote avec le nouveau contenu
+    setSelectedNote(prev => prev ? { ...prev, content } : null)
+    setLastSavedContent(content)
+    isModifiedRef.current = false
+
+    // 💬 2) Log après sauvegarde réussie
+    console.log(
+      "%c[AutoSave] Sauvegarde réussie ✅",
+      "color: lightgreen; font-weight: bold;",
+      {
+        noteId: selectedNote.id,
+        title: selectedNote.title,
+        savedAt: new Date().toLocaleTimeString(),
+        contentPreview: content.slice(0, 120) + (content.length > 120 ? "..." : ""),
+      }
+    )
+
+    // Recharger les dossiers et notes en temps réel
+    if (reloadFoldersRef.current) {
+      await reloadFoldersRef.current()
+    }
+
+    setSaveStatus("saved")
+    setTimeout(() => setSaveStatus("idle"), 2000)
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde automatique:", error)
+    setSaveStatus("error")
+    setTimeout(() => setSaveStatus("idle"), 3000)
+  } finally {
+    setSaving(false)
+  }
+}
+
 
   // Debounce : sauvegarde automatique 1.5 secondes après la fin de la modification
   const triggerAutoSave = () => {

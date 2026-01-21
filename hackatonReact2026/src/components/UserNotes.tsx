@@ -1,120 +1,140 @@
+// src/components/UserNotes.tsx
 import { useEffect, useState, useRef } from "react"
 import { FileTree } from "./files_components/FileTree"
 import TipTap from "./notes_components/TipTap"
-import { setEditorContentMarkdown, getEditorContentMarkdown } from "./../services/TipTapServices"
+
+import {
+  getEditorContentJSON,
+  setEditorContentJSON,
+  setEditorContentMarkdown,
+} from "./../services/TipTapServices"
+
 import type { NoteNode } from "../types/NoteNode"
 import { noteService } from "../services"
 
 export default function UserNotes() {
-  const [isEditable, setIsEditable] = useState(true)
+  const [isEditable, setIsEditable] = useState(false)
   const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
+
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+
   const [lastSavedContent, setLastSavedContent] = useState<string>("")
+
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isModifiedRef = useRef(false)
+  const isLoadingRef = useRef(false)
+
   const reloadFoldersRef = useRef<(() => Promise<void>) | null>(null)
+
+  /**
+   * Helpers: détecter si content est un JSON ProseMirror stringifié
+   */
+  function tryParseJSON(content: string): any | null {
+    if (!content) return null
+    const trimmed = content.trim()
+    // petit guard: si ça ne commence pas par { ou [, on évite parse
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return null
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      return null
+    }
+  }
 
   // Recharger le contenu de la note sélectionnée
   useEffect(() => {
     if (!selectedNote) return
 
-    // Charger le contenu complet de la note depuis l'API
     const loadNoteContent = async () => {
       try {
-        const noteContent = selectedNote.content
+        const noteContent = selectedNote.content ?? ""
         setLastSavedContent(noteContent)
+
+        // Empêche autosave / modifications pendant qu'on injecte le contenu
+        isLoadingRef.current = true
         isModifiedRef.current = false
-        
-        // Utiliser un petit délai pour s'assurer que l'éditeur est prêt
+
+        // On attend que TipTap soit prêt (registerEditor exécuté)
         setTimeout(() => {
-          setEditorContentMarkdown(noteContent)
+          const parsed = tryParseJSON(noteContent)
+
+          if (parsed) {
+            // ✅ Nouveau format : JSON
+            setEditorContentJSON(parsed)
+          } else {
+            // 🔁 Ancien format : Markdown (migration douce)
+            // Ça affichera correctement (mais compressera les \n vides), puis
+            // dès que tu sauvegardes, ça repassera en JSON.
+            setEditorContentMarkdown(noteContent)
+          }
+
+          // stop loading + reset modified
+          setTimeout(() => {
+            isModifiedRef.current = false
+            isLoadingRef.current = false
+            setSaveStatus("idle")
+          }, 0)
         }, 50)
       } catch (error) {
         console.error("Erreur lors du chargement de la note:", error)
+        isLoadingRef.current = false
       }
     }
 
     loadNoteContent()
   }, [selectedNote?.id])
 
+  // Fonction de sauvegarde (JSON)
+  const autoSave = async () => {
+    if (!selectedNote || !isEditable || !isModifiedRef.current) return
 
-// Fonction de sauvegarde
-const autoSave = async () => {
-  if (!selectedNote || !isEditable || !isModifiedRef.current) {
-    return
-  }
+    const json = getEditorContentJSON()
+    if (!json) return
 
-  const content = getEditorContentMarkdown()
-  if (!content) return
+    try {
+      setSaving(true)
+      setSaveStatus("saving")
 
-  // 💬 1) Log avant la sauvegarde (ce qu'on envoie à l'API)
-  console.log(
-    "%c[AutoSave] Contenu à sauvegarder",
-    "color: orange; font-weight: bold;",
-    {
-      noteId: selectedNote.id,
-      title: selectedNote.title,
-      contentPreview: content.slice(0, 120) + (content.length > 120 ? "..." : ""),
-      fullContent: content,
-    }
-  )
+      const contentToStore = JSON.stringify(json)
 
-  try {
-    setSaving(true)
-    setSaveStatus("saving")
-
-    await noteService.updateNote({
-      id: selectedNote.id,
-      title: selectedNote.title,
-      content: content,
-    })
-
-    // Mettre à jour le state selectedNote avec le nouveau contenu
-    setSelectedNote(prev => prev ? { ...prev, content } : null)
-    setLastSavedContent(content)
-    isModifiedRef.current = false
-
-    // 💬 2) Log après sauvegarde réussie
-    console.log(
-      "%c[AutoSave] Sauvegarde réussie ✅",
-      "color: lightgreen; font-weight: bold;",
-      {
-        noteId: selectedNote.id,
+      await noteService.updateNote({
+        id: selectedNote.id,
         title: selectedNote.title,
-        savedAt: new Date().toLocaleTimeString(),
-        contentPreview: content.slice(0, 120) + (content.length > 120 ? "..." : ""),
+        content: contentToStore,
+      })
+
+      // Mettre à jour le state selectedNote avec le nouveau contenu
+      setSelectedNote(prev => (prev ? { ...prev, content: contentToStore } : null))
+      setLastSavedContent(contentToStore)
+      isModifiedRef.current = false
+
+      if (reloadFoldersRef.current) {
+        await reloadFoldersRef.current()
       }
-    )
 
-    // Recharger les dossiers et notes en temps réel
-    if (reloadFoldersRef.current) {
-      await reloadFoldersRef.current()
+      setSaveStatus("saved")
+      setTimeout(() => setSaveStatus("idle"), 2000)
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde automatique:", error)
+      setSaveStatus("error")
+      setTimeout(() => setSaveStatus("idle"), 3000)
+    } finally {
+      setSaving(false)
     }
-
-    setSaveStatus("saved")
-    setTimeout(() => setSaveStatus("idle"), 2000)
-  } catch (error) {
-    console.error("Erreur lors de la sauvegarde automatique:", error)
-    setSaveStatus("error")
-    setTimeout(() => setSaveStatus("idle"), 3000)
-  } finally {
-    setSaving(false)
   }
-}
-
 
   // Debounce : sauvegarde automatique 1.5 secondes après la fin de la modification
   const triggerAutoSave = () => {
+    // ✅ important: ne pas autosave pendant un setContent (load)
+    if (isLoadingRef.current) return
+    if (!isEditable) return
+
     isModifiedRef.current = true
     setSaveStatus("saving")
 
-    // Annuler le timer précédent
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
-    }
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
 
-    // Créer un nouveau timer
     debounceTimerRef.current = setTimeout(() => {
       autoSave()
     }, 1500)
@@ -123,9 +143,7 @@ const autoSave = async () => {
   // Nettoyage au démontage
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     }
   }, [])
 
@@ -133,7 +151,7 @@ const autoSave = async () => {
     <div className="flex min-h-dvh w-full">
       {/* Panneau de gauche : FileTree */}
       <FileTree
-        onReloadRequest={(reloadFn) => {
+        onReloadRequest={reloadFn => {
           reloadFoldersRef.current = reloadFn
         }}
         onNoteClick={(note: NoteNode) => {
@@ -142,7 +160,6 @@ const autoSave = async () => {
             clearTimeout(debounceTimerRef.current)
             autoSave()
           }
-
           setSelectedNote(note)
         }}
       />
@@ -151,11 +168,7 @@ const autoSave = async () => {
       <div className="flex-1 p-4 flex flex-col">
         {/* Barre en haut : titre + boutons */}
         <div className="flex items-center justify-between mb-4">
-          <h2
-            className={`text-2xl font-bold ${
-              isEditable ? "text-yellow-500" : "text-purple-300"
-            }`}
-          >
+          <h2 className={`text-2xl font-bold ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>
             Notepad en mode {isEditable ? "édition" : "lecture seule"}
           </h2>
 
@@ -165,16 +178,12 @@ const autoSave = async () => {
                 <span className="inline-block animate-spin">⏳</span> Sauvegarde...
               </span>
             )}
-            {saveStatus === "saved" && (
-              <span className="text-green-400 text-sm">✅ Sauvegardé</span>
-            )}
-            {saveStatus === "error" && (
-              <span className="text-red-400 text-sm">❌ Erreur</span>
-            )}
+            {saveStatus === "saved" && <span className="text-green-400 text-sm">✅ Sauvegardé</span>}
+            {saveStatus === "error" && <span className="text-red-400 text-sm">❌ Erreur</span>}
 
             <button
               className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer"
-              onClick={() => setIsEditable((v: boolean) => !v)}
+              onClick={() => setIsEditable(v => !v)}
             >
               {isEditable ? "Lecture seule" : "Édition"}
             </button>
@@ -186,13 +195,9 @@ const autoSave = async () => {
           {/* Titre de la note sélectionnée */}
           <div className="px-4 pb-2 border-b border-orange-500/40">
             {selectedNote ? (
-              <h3 className="text-xl font-semibold text-orange-300">
-                {selectedNote.title}
-              </h3>
+              <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
             ) : (
-              <span className="text-sm text-gray-400">
-                Aucune note sélectionnée
-              </span>
+              <span className="text-sm text-gray-400">Aucune note sélectionnée</span>
             )}
           </div>
 

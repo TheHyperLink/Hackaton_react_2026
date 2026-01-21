@@ -78,7 +78,7 @@ function findMarkdownTableRangeDocWise(state: EditorState) {
 }
 
 const CtrlEnterMarkdown = Extension.create({
-  name: "ctrlEnterTableConvert",
+  name: "ctrlEnterMarkdown",
 
   addKeyboardShortcuts() {
     return {

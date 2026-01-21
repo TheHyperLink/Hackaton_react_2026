@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@import "./style/tiptap-overrides.css";
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

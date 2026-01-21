@@ -6,7 +6,7 @@ import type { NoteNode } from "../types/NoteNode"
 import { noteService } from "../services"
 
 export default function UserNotes() {
-  const [isEditable, setIsEditable] = useState(false)
+  const [isEditable, setIsEditable] = useState(true)
   const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")

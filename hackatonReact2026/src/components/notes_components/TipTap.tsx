@@ -63,7 +63,7 @@ export default function Tiptap({ editable = true }: TiptapProps) {
     // Si tu relies ton app à du markdown, tu le gères via Markdown extension (get/set).
     // contentType: "markdown",  <-- je te conseille de l'enlever sauf si tu es sûr que ton plugin l'utilise.
 
-    content: "Default",
+    content: "Choississez une note.",
   })
 
   // ✅ Enregistrement service

@@ -46,6 +46,10 @@ export interface NoteWithLinks {
   folderId: number;
   title: string;
   content: string;
+  sizeBytes?: number;
+  lineCount?: number;
+  wordCount?: number;
+  charCount?: number;
   createdAt: string;
   updatedAt: string;
   internalLinks: InternalLink[];

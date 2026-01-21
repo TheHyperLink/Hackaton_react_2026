@@ -6,4 +6,8 @@ export type NoteNode = {
   content: string
   createdAt: string
   updatedAt: string
+  sizeBytes?: number
+  lineCount?: number
+  wordCount?: number
+  charCount?: number
 }

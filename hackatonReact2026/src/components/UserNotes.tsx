@@ -48,6 +48,18 @@ export default function UserNotes() {
 
     const loadNoteContent = async () => {
       try {
+        // Charger les données complètes de la note pour obtenir les métadonnées
+        const fullNoteDetail = await noteService.getNoteById(selectedNote.id)
+        
+        // Mettre à jour selectedNote avec les métadonnées
+        setSelectedNote(prev => prev ? {
+          ...prev,
+          sizeBytes: fullNoteDetail.sizeBytes,
+          lineCount: fullNoteDetail.lineCount,
+          wordCount: fullNoteDetail.wordCount,
+          charCount: fullNoteDetail.charCount,
+        } : null)
+
         const noteContent = selectedNote.content ?? ""
         setLastSavedContent(noteContent)
 
@@ -108,6 +120,16 @@ export default function UserNotes() {
       setSelectedNote(prev => (prev ? { ...prev, content: contentToStore } : null))
       setLastSavedContent(contentToStore)
       isModifiedRef.current = false
+
+      // Recharger les données complètes pour mettre à jour les métadonnées
+      const fullNoteDetail = await noteService.getNoteById(selectedNote.id)
+      setSelectedNote(prev => prev ? {
+        ...prev,
+        sizeBytes: fullNoteDetail.sizeBytes,
+        lineCount: fullNoteDetail.lineCount,
+        wordCount: fullNoteDetail.wordCount,
+        charCount: fullNoteDetail.charCount,
+      } : null)
 
       if (reloadFoldersRef.current) {
         await reloadFoldersRef.current()
@@ -195,7 +217,24 @@ export default function UserNotes() {
           {/* Titre de la note sélectionnée */}
           <div className="px-4 pb-2 border-b border-orange-500/40">
             {selectedNote ? (
-              <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
+              <div>
+                <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
+                {/* Métadonnées */}
+                <div className="mt-2 flex gap-4 text-xs text-gray-400">
+                  {selectedNote.sizeBytes !== undefined && (
+                    <span>📦 {(selectedNote.sizeBytes / 1024).toFixed(2)} KB</span>
+                  )}
+                  {selectedNote.charCount !== undefined && (
+                    <span>🔤 {selectedNote.charCount} caractères</span>
+                  )}
+                  {selectedNote.wordCount !== undefined && (
+                    <span>📝 {selectedNote.wordCount} mots</span>
+                  )}
+                  {selectedNote.lineCount !== undefined && (
+                    <span>📄 {selectedNote.lineCount} lignes</span>
+                  )}
+                </div>
+              </div>
             ) : (
               <span className="text-sm text-gray-400">Aucune note sélectionnée</span>
             )}

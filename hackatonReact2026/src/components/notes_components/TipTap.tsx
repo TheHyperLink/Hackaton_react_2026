@@ -1,4 +1,3 @@
-
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Markdown } from "@tiptap/markdown"
@@ -10,6 +9,7 @@ import TaskItem from "@tiptap/extension-task-item"
 import { useEffect } from "react"
 
 import CtrlEnterMarkdown from "./CtrlEnterMarkdown"
+import CtrlEnterTableConvert from "./CtrlTableConvert"
 
 import {
   registerEditor,
@@ -31,13 +31,18 @@ export default function Tiptap({ editable = true }: TiptapProps) {
         listItem: false,
       }),
 
-      // ✅ Markdown natif
+      // ✅ Markdown
       Markdown.configure({
         indentation: { style: "space", size: 2 },
       }),
 
-      // ✅ Ctrl + Enter = reparse Markdown
+      // ✅ Raccourcis clavier
+      // Ctrl+Enter : reparse markdown (ton extension)
       CtrlEnterMarkdown,
+
+      // Shift+Ctrl+Enter (ou autre) : conversion table
+      // ⚠️ IMPORTANT : éviter le même raccourci que CtrlEnterMarkdown
+      CtrlEnterTableConvert,
 
       Link.configure({
         autolink: true,
@@ -54,7 +59,10 @@ export default function Tiptap({ editable = true }: TiptapProps) {
       }),
     ],
 
-    contentType: "markdown",
+    // ✅ TipTap n'a généralement pas besoin de "contentType: markdown"
+    // Si tu relies ton app à du markdown, tu le gères via Markdown extension (get/set).
+    // contentType: "markdown",  <-- je te conseille de l'enlever sauf si tu es sûr que ton plugin l'utilise.
+
     content: "Default",
   })
 
@@ -72,9 +80,8 @@ export default function Tiptap({ editable = true }: TiptapProps) {
 
   return (
     <div
-      className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${
-        editable ? "" : "cursor-not-allowed"
-      }`}
+      className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${editable ? "" : "cursor-not-allowed"
+        }`}
     >
       <EditorContent
         editor={editor}

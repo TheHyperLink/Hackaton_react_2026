@@ -59,6 +59,7 @@ export interface FolderDetail {
   name: string;
   color: string;
   parentFolderId: number | null;
+  isRoot: boolean;
   createdAt: string;
   updatedAt: string;
   subFolders: string[];

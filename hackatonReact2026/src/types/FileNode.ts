@@ -6,6 +6,7 @@ export type FileNode = {
   name: string
   color: string
   parentFolderId: number | null
+  isRoot: boolean
   createdAt: string
   updatedAt: string
   notes?: NoteNode[]

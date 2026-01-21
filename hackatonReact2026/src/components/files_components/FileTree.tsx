@@ -17,6 +17,11 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [noteContextMenu, setNoteContextMenu] = useState<{
+    x: number;
+    y: number;
+    note: NoteNode;
+  } | null>(null);
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
     type: "createFolder" | "createNote";
@@ -24,6 +29,15 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
   }>({
     isOpen: false,
     type: "createFolder",
+  });
+  const [noteDialogState, setNoteDialogState] = useState<{
+    isOpen: boolean;
+    type: "renameNote" | "deleteNote";
+    targetNote?: NoteNode;
+    defaultValue?: string;
+  }>({
+    isOpen: false,
+    type: "renameNote",
   });
 
   // Fonction pour recharger les dossiers
@@ -77,6 +91,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
       name: folderDetail.name,
       color: folderDetail.color,
       parentFolderId: folderDetail.parentFolderId,
+      isRoot: folderDetail.isRoot || false,
       createdAt: folderDetail.createdAt,
       updatedAt: folderDetail.updatedAt,
       subFolders: Array.isArray(folderDetail.subFolders) && typeof folderDetail.subFolders[0] === "string" 
@@ -92,25 +107,58 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
-  const handleRootMenuItems = (): MenuItem[] => [
+  const getRootFolder = (): FileNode | undefined => {
+    return folderList.find(folder => folder.isRoot === true);
+  };
+
+  const handleRootMenuItems = (): MenuItem[] => {
+    const rootFolder = getRootFolder();
+    const rootFolderId = rootFolder?.id;
+
+    return [
+      {
+        label: "Créer un dossier à la racine",
+        icon: "🎃",
+        action: () =>
+          setDialogState({
+            isOpen: true,
+            type: "createFolder",
+            defaultColor: "yellow",
+          }),
+      },
+      {
+        label: "Créer une note à la racine",
+        icon: "🗒️",
+        action: () =>
+          setDialogState({
+            isOpen: true,
+            type: "createNote",
+          }),
+      },
+    ];
+  };
+
+  const handleRootNoteMenuItems = (note: NoteNode): MenuItem[] => [
     {
-      label: "Créer un dossier à la racine",
-      icon: "🎃",
+      label: "Renommer la note",
+      icon: "✏️",
       action: () =>
-        setDialogState({
+        setNoteDialogState({
           isOpen: true,
-          type: "createFolder",
-          defaultColor: "yellow",
+          type: "renameNote",
+          targetNote: note,
+          defaultValue: note.title,
         }),
     },
     {
-      label: "Créer une note à la racine",
-      icon: "🗒️",
-      action: () =>
-        setDialogState({
-          isOpen: true,
-          type: "createNote",
-        }),
+      label: "Supprimer la note",
+      icon: "🗑️",
+      isDanger: true,
+      action: () => {
+        if (confirm(`Êtes-vous sûr de vouloir supprimer "${note.title}" ?`)) {
+          handleDeleteNote(note.id);
+        }
+      },
     },
   ];
 
@@ -125,20 +173,21 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
       // Convertir le résultat de l'API en FileNode
       const newFolder = convertFolderDetailToFileNode(newFolderDetail);
 
-      // Mettre à jour la liste locale
-      setFolderList(prevFolders => {
-        if (parentFolderId === null) {
-          // Créer à la racine
-          return [...prevFolders, newFolder];
-        } else {
-          // Créer un sous-dossier
-          return prevFolders.map(folder =>
-            folder.id === parentFolderId
-              ? { ...folder, subFolders: [...(folder.subFolders || []), newFolder] }
-              : folder
-          );
-        }
-      });
+      // Mettre à jour la liste locale de manière récursive
+      const addFolderRecursive = (folders: FileNode[]): FileNode[] =>
+        folders.map(folder => {
+          if (folder.id === parentFolderId) {
+            // Trouver le dossier parent et ajouter le nouveau dossier
+            return { ...folder, subFolders: [...(folder.subFolders || []), newFolder] };
+          }
+          if (folder.subFolders) {
+            // Chercher dans les sous-dossiers de manière récursive
+            return { ...folder, subFolders: addFolderRecursive(folder.subFolders) };
+          }
+          return folder;
+        });
+
+      setFolderList(prevFolders => addFolderRecursive(prevFolders));
     } catch (err) {
       console.error("Erreur lors de la création du dossier:", err);
       setError(err instanceof Error ? err.message : "Erreur lors de la création du dossier");
@@ -290,19 +339,30 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
 
   const handleDialogConfirm = async (value: string, color?: string) => {
     const { type } = dialogState;
-    const rootFolderId = folderList[0]?.id;
+    const rootFolder = getRootFolder();
+    const rootFolderId = rootFolder?.id;
 
     try {
       switch (type) {
         case "createFolder":
-          // Créer un nouveau dossier à la racine
-          const newRootFolderDetail = await folderService.createFolder({
-            name: value,
-            color: color || "yellow",
-            parentFolderId: null,
-          });
-          const newRootFolder = convertFolderDetailToFileNode(newRootFolderDetail);
-          setFolderList(prev => [...prev, newRootFolder]);
+          // Créer un nouveau dossier dans le dossier Root
+          if (rootFolderId) {
+            const newRootFolderDetail = await folderService.createFolder({
+              name: value,
+              color: color || "yellow",
+              parentFolderId: rootFolderId,
+            });
+            const newRootFolder = convertFolderDetailToFileNode(newRootFolderDetail);
+            
+            // Mettre à jour la liste locale
+            setFolderList(prev =>
+              prev.map(folder =>
+                folder.id === rootFolderId
+                  ? { ...folder, subFolders: [...(folder.subFolders || []), newRootFolder] }
+                  : folder
+              )
+            );
+          }
           break;
 
         case "createNote":
@@ -317,6 +377,25 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
 
     setDialogState({ isOpen: false, type: "createFolder" });
+  };
+
+  const handleNoteDialogConfirm = async (value: string) => {
+    const { type, targetNote } = noteDialogState;
+
+    try {
+      switch (type) {
+        case "renameNote":
+          if (targetNote) {
+            await handleRenameNote(targetNote.id, value);
+          }
+          break;
+      }
+    } catch (err) {
+      console.error("Erreur:", err);
+      setError(err instanceof Error ? err.message : "Une erreur s'est produite");
+    }
+
+    setNoteDialogState({ isOpen: false, type: "renameNote" });
   };
 
   if (loading) {
@@ -347,25 +426,69 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
         className="w-1/4 border-4 border-orange-500/25 rounded-2xl overflow-hidden"
         onContextMenu={handleRootContextMenu}
       >
-        {folderList.length === 0 ? (
-          <div className="p-4 text-center text-yellow-500">
-            Aucun dossier. Clic droit pour créer.
-          </div>
-        ) : (
-          folderList.map(folder => (
-            <FileItem
-              key={folder.id}
-              node={folder}
-              onNoteClick={onNoteClick}
-              onCreateFolder={handleCreateFolder}
-              onCreateNote={handleCreateNote}
-              onRenameFolder={handleRenameFolder}
-              onRenameNote={handleRenameNote}
-              onDeleteFolder={handleDeleteFolder}
-              onDeleteNote={handleDeleteNote}
-            />
-          ))
-        )}
+        {(() => {
+          // Trouver le dossier Root
+          const rootFolder = getRootFolder();
+          
+          // Si pas de Root folder, afficher le message
+          if (!rootFolder) {
+            return (
+              <div className="p-4 text-center text-yellow-500">
+                Aucun dossier. Clic droit pour créer.
+              </div>
+            );
+          }
+
+          // Récupérer les enfants du Root (subFolders et notes)
+          const rootChildren = rootFolder.subFolders || [];
+          const rootNotes = rootFolder.notes || [];
+          
+          // Si le Root n'a pas d'enfants
+          if (rootChildren.length === 0 && rootNotes.length === 0) {
+            return (
+              <div className="p-4 text-center text-yellow-500">
+                Aucun dossier. Clic droit pour créer.
+              </div>
+            );
+          }
+
+          return (
+            <div>
+              {/* Afficher les notes du Root */}
+              {rootNotes.map((note: NoteNode) => (
+                <div key={note.id}>
+                  <div
+                    className="flex items-center gap-2 px-2 py-1 text-yellow-500 hover:bg-yellow-900/30 hover:cursor-pointer rounded"
+                    onClick={() => onNoteClick && onNoteClick(note)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setNoteContextMenu({ x: e.clientX, y: e.clientY, note });
+                    }}
+                  >
+                    <span className="text-1xl">🗒️</span>
+                    <span className="text-1xl">{note.title}</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Afficher les enfants du Root (dossiers) */}
+              {rootChildren.map(folder => (
+                <FileItem
+                  key={folder.id}
+                  node={folder}
+                  onNoteClick={onNoteClick}
+                  onCreateFolder={handleCreateFolder}
+                  onCreateNote={handleCreateNote}
+                  onRenameFolder={handleRenameFolder}
+                  onRenameNote={handleRenameNote}
+                  onDeleteFolder={handleDeleteFolder}
+                  onDeleteNote={handleDeleteNote}
+                />
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Context Menu pour la racine */}
@@ -374,6 +497,15 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
           position={contextMenu}
           items={handleRootMenuItems()}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Context Menu pour les notes du Root */}
+      {noteContextMenu && (
+        <ContextMenu
+          position={{ x: noteContextMenu.x, y: noteContextMenu.y }}
+          items={handleRootNoteMenuItems(noteContextMenu.note)}
+          onClose={() => setNoteContextMenu(null)}
         />
       )}
 
@@ -395,6 +527,20 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
         onConfirm={handleDialogConfirm}
         onCancel={() =>
           setDialogState({ isOpen: false, type: "createFolder" })
+        }
+        type="create"
+      />
+
+      {/* Dialog pour renommer les notes du Root */}
+      <InputDialog
+        isOpen={noteDialogState.isOpen}
+        title="Renommer la note"
+        placeholder="Nouveau titre"
+        defaultValue={noteDialogState.defaultValue}
+        isFolderDialog={false}
+        onConfirm={handleNoteDialogConfirm}
+        onCancel={() =>
+          setNoteDialogState({ isOpen: false, type: "renameNote" })
         }
         type="create"
       />

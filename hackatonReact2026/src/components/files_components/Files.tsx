@@ -52,51 +52,58 @@ export function FileItem({
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
-  const handleFolderMenuItems = (): MenuItem[] => [
-    {
-      label: "Créer un sous-dossier",
-      icon: "🎃",
-      action: () =>
-        setDialogState({
-          isOpen: true,
-          type: "createFolder",
-          targetId: node.id,
-          defaultColor: "yellow",
-        }),
-    },
-    {
-      label: "Créer une note",
-      icon: "🗒️",
-      action: () =>
-        setDialogState({
-          isOpen: true,
-          type: "createNote",
-          targetId: node.id,
-        }),
-    },
-    {
-      label: "Modifier le dossier",
-      icon: "✏️",
-      action: () =>
-        setDialogState({
-          isOpen: true,
-          type: "renameFolder",
-          targetId: node.id,
-          defaultValue: node.name,
-          defaultColor: node.color,
-        }),
-    },
-    {
-      label: "Supprimer le dossier",
-      icon: "🗑️",
-      isDanger: true,
-      action: () => {
-        if (confirm(`Êtes-vous sûr de vouloir supprimer "${node.name}" ?`)) {
-          onDeleteFolder?.(node.id);
-        }
+  const handleFolderMenuItems = (): MenuItem[] => {
+    // Ne pas afficher le menu pour le dossier Root
+    if (node.isRoot) {
+      return [];
+    }
+
+    return [
+      {
+        label: "Créer un sous-dossier",
+        icon: "🎃",
+        action: () =>
+          setDialogState({
+            isOpen: true,
+            type: "createFolder",
+            targetId: node.id,
+            defaultColor: "yellow",
+          }),
       },
-    },
-  ];
+      {
+        label: "Créer une note",
+        icon: "🗒️",
+        action: () =>
+          setDialogState({
+            isOpen: true,
+            type: "createNote",
+            targetId: node.id,
+          }),
+      },
+      {
+        label: "Modifier le dossier",
+        icon: "✏️",
+        action: () =>
+          setDialogState({
+            isOpen: true,
+            type: "renameFolder",
+            targetId: node.id,
+            defaultValue: node.name,
+            defaultColor: node.color,
+          }),
+      },
+      {
+        label: "Supprimer le dossier",
+        icon: "🗑️",
+        isDanger: true,
+        action: () => {
+          if (confirm(`Êtes-vous sûr de vouloir supprimer "${node.name}" ?`)) {
+            onDeleteFolder?.(node.id);
+          }
+        },
+      },
+    ];
+  };
 
   const handleNoteMenuItems = (note: NoteNode): MenuItem[] => [
     {
@@ -152,45 +159,10 @@ export function FileItem({
   return (
     <>
       <div style={{ marginLeft: depth * 12 }}>
-        {/* Bouton dossier */}
-        <button
-          onClick={() => setOpen(!open)}
-          onContextMenu={handleFolderContextMenu}
-          className={`
-            w-full flex items-center gap-2
-            px-2 py-1 rounded
-            text-left
-            hover:bg-violet-800/30
-            hover:text-orange-400
-            hover:cursor-pointer
-            font-medium
-          `}
-        >
-          <span className="text-1xl">{open ? "🕸️" : "🎃"}</span>
-          <span
-            className={
-              "text-1xl " +
-              (node.color === "red"
-                ? "text-red-500"
-                : node.color === "yellow"
-                ? "text-yellow-400"
-                : node.color === "green"
-                ? "text-green-500"
-                : node.color === "purple"
-                ? "text-purple-400"
-                : node.color === "pink"
-                ? "text-pink-400"
-                : "")
-            }
-          >
-            {node.name}
-          </span>
-        </button>
-
-        {/* Contenu du dossier ouvert */}
-        {open && (
+        {/* Si c'est le dossier Root, afficher directement son contenu */}
+        {node.isRoot ? (
           <div className="mt-1">
-            {/* Notes de ce dossier */}
+            {/* Notes du Root */}
             {node.notes &&
               node.notes.map((note: NoteNode) => (
                 <div key={note.id} style={{ marginLeft: 12 }}>
@@ -209,13 +181,13 @@ export function FileItem({
                 </div>
               ))}
 
-            {/* Sous-dossiers récursifs */}
+            {/* Sous-dossiers du Root */}
             {node.subFolders &&
               node.subFolders.map((sub: FileNode) => (
                 <FileItem
                   key={sub.id}
                   node={sub}
-                  depth={depth + 1}
+                  depth={depth}
                   onNoteClick={onNoteClick}
                   onCreateFolder={onCreateFolder}
                   onCreateNote={onCreateNote}
@@ -226,6 +198,84 @@ export function FileItem({
                 />
               ))}
           </div>
+        ) : (
+          <>
+            {/* Bouton dossier normal */}
+            <button
+              onClick={() => setOpen(!open)}
+              onContextMenu={handleFolderContextMenu}
+              className={`
+                w-full flex items-center gap-2
+                px-2 py-1 rounded
+                text-left
+                hover:bg-violet-800/30
+                hover:text-orange-400
+                hover:cursor-pointer
+                font-medium
+              `}
+            >
+              <span className="text-1xl">{open ? "🕸️" : "🎃"}</span>
+              <span
+                className={
+                  "text-1xl " +
+                  (node.color === "red"
+                    ? "text-red-500"
+                    : node.color === "yellow"
+                    ? "text-yellow-400"
+                    : node.color === "green"
+                    ? "text-green-500"
+                    : node.color === "purple"
+                    ? "text-purple-400"
+                    : node.color === "pink"
+                    ? "text-pink-400"
+                    : "")
+                }
+              >
+                {node.name}
+              </span>
+            </button>
+
+            {/* Contenu du dossier ouvert */}
+            {open && (
+              <div className="mt-1">
+                {/* Notes de ce dossier */}
+                {node.notes &&
+                  node.notes.map((note: NoteNode) => (
+                    <div key={note.id} style={{ marginLeft: 12 }}>
+                      <div
+                        className="flex items-center gap-2 px-2 py-1 text-yellow-500 hover:bg-yellow-900/30 hover:cursor-pointer rounded"
+                        onClick={() => onNoteClick && onNoteClick(note)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setNoteContextMenu({ x: e.clientX, y: e.clientY, note });
+                        }}
+                      >
+                        <span className="text-1xl">🗒️</span>
+                        <span className="text-1xl">{note.title}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Sous-dossiers récursifs */}
+                {node.subFolders &&
+                  node.subFolders.map((sub: FileNode) => (
+                    <FileItem
+                      key={sub.id}
+                      node={sub}
+                      depth={depth + 1}
+                      onNoteClick={onNoteClick}
+                      onCreateFolder={onCreateFolder}
+                      onCreateNote={onCreateNote}
+                      onRenameFolder={onRenameFolder}
+                      onRenameNote={onRenameNote}
+                      onDeleteFolder={onDeleteFolder}
+                      onDeleteNote={onDeleteNote}
+                    />
+                  ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 

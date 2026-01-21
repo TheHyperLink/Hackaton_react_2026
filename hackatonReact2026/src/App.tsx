@@ -6,18 +6,20 @@ import Login from "./components/loginConnexion_component/Login";
 import Register from "./components/loginConnexion_component/Register";
 import { authService } from "./services";
 
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Check cookie on load
+  // Vérifie la session côté serveur au chargement
   useEffect(() => {
-    const hasJwtCookie = document.cookie.includes("jwt=");
-    if (hasJwtCookie) {
-      setIsLoggedIn(true);
-    }
-    setLoading(false);
+    const check = async () => {
+      const valid = await authService.checkSession();
+      setIsLoggedIn(valid);
+      setLoading(false);
+    };
+    check();
   }, []);
 
   // LOGOUT

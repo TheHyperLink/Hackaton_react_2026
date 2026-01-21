@@ -30,9 +30,14 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps
         email: credentials.email,
         password: credentials.password,
       });
-
       setCredentials({ email: "", password: "" });
-      onLoginSuccess();
+      // Vérifie la session côté serveur pour garantir la connexion
+      const valid = await authService.checkSession();
+      if (valid) {
+        onLoginSuccess();
+      } else {
+        setLoginError("Erreur de session après connexion");
+      }
     } catch (error) {
       setLoginError(
         error instanceof Error ? error.message : "Erreur de connexion"

@@ -2,6 +2,7 @@
 
 import { ApiClient } from "./ApiClient";
 import type { LoginRequest, RegisterRequest, AuthResponse } from "../types/ApiTypes";
+import { userService } from "./UserService";
 
 export class AuthService {
   private apiClient: ApiClient;
@@ -46,6 +47,19 @@ export class AuthService {
   public isAuthenticated(): boolean {
     // Vérifier si le cookie JWT existe
     return document.cookie.includes("jwt=");
+  }
+
+  /**
+   * Vérifie la session utilisateur côté serveur (endpoint /users/me)
+   * Retourne true si la session est valide, false sinon
+   */
+  public async checkSession(): Promise<boolean> {
+    try {
+      await userService.getCurrentUser();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
 

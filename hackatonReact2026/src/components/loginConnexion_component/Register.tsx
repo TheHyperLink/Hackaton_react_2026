@@ -38,7 +38,6 @@ export default function Register({onSwitchToLogin }: RegisterProps) {
         username: credentials.username,
         passwordHash: credentials.passwordHash,
       });
-
       setCredentials({ email: "", passwordHash: "", username: "" });
       onSwitchToLogin();
     } catch (error) {

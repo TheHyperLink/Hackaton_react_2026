@@ -1,6 +1,7 @@
-// Service API de base - Client HTTP réutilisable
+// Service API de base - Client HTTP rÃ©utilisable
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || "http://localhost:8080/api";
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string) || "http://localhost:8080/api";
 
 export class ApiClient {
   private static instance: ApiClient;
@@ -17,14 +18,27 @@ export class ApiClient {
     return ApiClient.instance;
   }
 
-  private getHeaders(): Record<string, string> {
+  private getJsonHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",
     };
   }
 
-  public async get<T>(endpoint: string, queryParams?: Record<string, unknown>): Promise<T> {
+  private getBinaryHeaders(): Record<string, string> {
+    // No Content-Type for binary GET requests
+    return {};
+  }
+
+  /**
+   * GET request supporting JSON or Blob
+   */
+  public async get<T>(
+    endpoint: string,
+    queryParams?: Record<string, unknown>,
+    responseType: "json" | "blob" = "json"
+  ): Promise<T> {
     const url = new URL(`${this.baseUrl}${endpoint}`);
+
     if (queryParams) {
       Object.entries(queryParams).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -35,79 +49,125 @@ export class ApiClient {
 
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: this.getHeaders(),
-      credentials: "include", // Inclure les cookies automatiquement
+      headers:
+        responseType === "blob"
+          ? this.getBinaryHeaders()
+          : this.getJsonHeaders(),
+      credentials: "include",
     });
 
     if (!response.ok) {
-      throw new Error(`GET ${endpoint} failed with status ${response.status}`);
+      const errorText = await response.text();
+      let errorMessage = errorText;
+      try {
+        const json = JSON.parse(errorText);
+        errorMessage = json.message || errorText;
+      } catch {}
+      const error: any = new Error(errorMessage || `GET ${endpoint} failed with status ${response.status}`);
+      error.status = response.status;
+      error.url = url.toString();
+      throw error;
+    }
+
+    if (responseType === "blob") {
+      return (await response.blob()) as T;
     }
 
     return response.json();
   }
 
+  /**
+   * POST JSON
+   */
   public async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "POST",
-      headers: this.getHeaders(),
-      credentials: "include", // Inclure les cookies automatiquement
+      headers: this.getJsonHeaders(),
+      credentials: "include",
       body: data ? JSON.stringify(data) : undefined,
     });
 
     if (!response.ok) {
-      throw new Error(`POST ${endpoint} failed with status ${response.status}`);
+      const errorText = await response.text();
+      let errorMessage = errorText;
+      try {
+        const json = JSON.parse(errorText);
+        errorMessage = json.message || errorText;
+      } catch {}
+      const error: any = new Error(errorMessage || `POST ${endpoint} failed with status ${response.status}`);
+      error.status = response.status;
+      error.url = `${this.baseUrl}${endpoint}`;
+      throw error;
     }
 
     return response.json();
   }
 
+  /**
+   * PUT JSON
+   */
   public async put<T>(endpoint: string, data?: unknown): Promise<T | void> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "PUT",
-      headers: this.getHeaders(),
-      credentials: "include", // Inclure les cookies automatiquement
+      headers: this.getJsonHeaders(),
+      credentials: "include",
       body: data ? JSON.stringify(data) : undefined,
     });
 
     if (!response.ok) {
-      throw new Error(`PUT ${endpoint} failed with status ${response.status}`);
+      const errorText = await response.text();
+      let errorMessage = errorText;
+      try {
+        const json = JSON.parse(errorText);
+        errorMessage = json.message || errorText;
+      } catch {}
+      const error: any = new Error(errorMessage || `PUT ${endpoint} failed with status ${response.status}`);
+      error.status = response.status;
+      error.url = `${this.baseUrl}${endpoint}`;
+      throw error;
     }
 
-    // Gérer les réponses vides (204 No Content ou corps vide)
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       return undefined;
     }
 
     const text = await response.text();
-    if (!text) {
-      return undefined;
-    }
+    if (!text) return undefined;
 
     return JSON.parse(text);
   }
 
+  /**
+   * DELETE JSON
+   */
   public async delete<T>(endpoint: string): Promise<T | void> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "DELETE",
-      headers: this.getHeaders(),
-      credentials: "include", // Inclure les cookies automatiquement
+      headers: this.getJsonHeaders(),
+      credentials: "include",
     });
 
     if (!response.ok) {
-      throw new Error(`DELETE ${endpoint} failed with status ${response.status}`);
+      const errorText = await response.text();
+      let errorMessage = errorText;
+      try {
+        const json = JSON.parse(errorText);
+        errorMessage = json.message || errorText;
+      } catch {}
+      const error: any = new Error(errorMessage || `DELETE ${endpoint} failed with status ${response.status}`);
+      error.status = response.status;
+      error.url = `${this.baseUrl}${endpoint}`;
+      throw error;
     }
 
-    // Gérer les réponses vides (204 No Content ou corps vide)
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       return undefined;
     }
 
     const text = await response.text();
-    if (!text) {
-      return undefined;
-    }
+    if (!text) return undefined;
 
     return JSON.parse(text);
   }

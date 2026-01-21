@@ -40,10 +40,31 @@ export default function Register({onSwitchToLogin }: RegisterProps) {
       });
       setCredentials({ email: "", passwordHash: "", username: "" });
       onSwitchToLogin();
-    } catch (error) {
-      setRegisterError(
-        error instanceof Error ? error.message : "Erreur lors de l'inscription"
-      );
+    } catch (error: any) {
+      // Interprétation des erreurs API selon le code
+      if (error && error.status) {
+        /*switch (error.status) {
+          case 400:
+            setRegisterError("Requête invalide. Vérifiez les champs.");
+            break;
+          case 401:
+            setRegisterError("Non autorisé.");
+            break;
+          case 403:
+            setRegisterError("Accès refusé. Veuillez vérifier vos droits.");
+            break;
+          case 409:
+            setRegisterError("Email ou nom d'utilisateur déjà utilisé.");
+            break;
+          case 500:
+            setRegisterError("Erreur serveur. Réessayez plus tard.");
+            break;
+          default:
+            setRegisterError("Erreur: " + (error.message || "Inscription impossible."));
+        }*/
+
+        setRegisterError("Erreur: " + (error.message));
+      } 
     } finally {
       setLoading(false);
     }

@@ -13,7 +13,7 @@ import type { NoteNode } from "../types/NoteNode"
 import { noteService } from "../services"
 
 export default function UserNotes() {
-  const [isEditable, setIsEditable] = useState(false)
+  const [isEditable, setIsEditable] = useState(true)
   const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
 
   const [saving, setSaving] = useState(false)
@@ -26,6 +26,39 @@ export default function UserNotes() {
   const isLoadingRef = useRef(false)
 
   const reloadFoldersRef = useRef<(() => Promise<void>) | null>(null)
+
+    const exportZip = async () => {
+  try {
+    const blob = await noteService.exportZip();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "notes.zip";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Erreur export ZIP:", err);
+  }
+};
+
+
+    const exportPdf = async () => {
+  if (!selectedNote) return
+
+  try {
+    const blob = await noteService.exportPdf(selectedNote.id)
+
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${selectedNote.title || "note"}.pdf`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error("Erreur export PDF:", err)
+  }
+}
 
   /**
    * Helpers: détecter si content est un JSON ProseMirror stringifié
@@ -191,9 +224,10 @@ export default function UserNotes() {
         {/* Barre en haut : titre + boutons */}
         <div className="flex items-center justify-between mb-4">
           <h2 className={`text-2xl font-bold ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>
-            Notepad en mode {isEditable ? "édition" : "lecture seule"}
+            Spookpad en mode {isEditable ? "édition" : "lecture seule"}
+            
           </h2>
-
+        
           <div className="flex gap-2 items-center">
             {saveStatus === "saving" && (
               <span className="text-yellow-400 text-sm flex items-center gap-1">
@@ -209,6 +243,15 @@ export default function UserNotes() {
             >
               {isEditable ? "Lecture seule" : "Édition"}
             </button>
+                <button
+              className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer"
+              onClick={exportPdf}
+              disabled={!selectedNote}
+            >
+              Export PDF
+            </button>
+
+                        <button className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer" onClick={exportZip}>Exporter toutes les notes (ZIP)</button>
           </div>
         </div>
 

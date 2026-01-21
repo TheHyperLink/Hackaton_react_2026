@@ -54,6 +54,11 @@ export class NoteService {
     return this.apiClient.put<void>(`/notes/${request.id}`, request);
   }
 
+    
+async exportPdf(id: number): Promise<Blob> {
+    return this.apiClient.get<Blob>(`/export/pdf/${id}`, undefined, "blob");
+  }
+  
   /**
    * Supprime une note
    * DELETE /notes/{id}
@@ -61,6 +66,12 @@ export class NoteService {
   public async deleteNote(id: number): Promise<void> {
     return this.apiClient.delete<void>(`/notes/${id}`);
   }
+
+  async exportZip(): Promise<Blob> {
+  return this.apiClient.get<Blob>("/export/zip", undefined, "blob");
 }
+}
+
+
 
 export const noteService = new NoteService();

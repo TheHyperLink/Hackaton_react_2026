@@ -38,10 +38,31 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps
       } else {
         setLoginError("Erreur de session après connexion");
       }
-    } catch (error) {
-      setLoginError(
-        error instanceof Error ? error.message : "Erreur de connexion"
-      );
+    } catch (error: any) {
+      // Interprétation des erreurs API selon le code
+      if (error && error.status) {
+        /*switch (error.status) {
+          case 400:
+            setLoginError("Requête invalide. Vérifiez les champs.");
+            break;
+          case 401:
+            setLoginError("Identifiants incorrects ou non autorisé.");
+            break;
+          case 403:
+            setLoginError("Accès refusé. Veuillez vérifier vos droits.");
+            break;
+          case 404:
+            setLoginError("Utilisateur non trouvé.");
+            break;
+          case 500:
+            setLoginError("Erreur serveur. Réessayez plus tard.");
+            break;
+          default:
+            setLoginError("Erreur: " + (error.message || "Connexion impossible."));
+            
+        }*/
+       setLoginError("Erreur: " + (error.message));
+      } 
     } finally {
       setLoading(false);
     }

@@ -2,26 +2,14 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import UserNotes from "./components/UserNotes";
 import HalloweenBackground from "./components/background/HalloweenBackground";
+import Login from "./components/loginConnexion_component/Login";
+import Register from "./components/loginConnexion_component/Register";
 import { authService } from "./services";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loginError, setLoginError] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
-
-  // Register form state
-  const [credentials, setCredentials] = useState({
-    email: "",
-    passwordHash: "",
-    username: "",
-  });
-
-  // Login form state
-  const [credentialsLogin, setCredentialsLogin] = useState({
-    email: "",
-    password: "",
-  });
 
   // Check cookie on load
   useEffect(() => {
@@ -32,78 +20,10 @@ function App() {
     setLoading(false);
   }, []);
 
-  // LOGIN
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-
-    if (!credentialsLogin.email || !credentialsLogin.password) {
-      setLoginError("Veuillez remplir tous les champs");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await authService.login({
-        email: credentialsLogin.email,
-        password: credentialsLogin.password,
-      });
-
-      setIsLoggedIn(true);
-      setCredentialsLogin({ email: "", password: "" });
-    } catch (error) {
-      setLoginError(
-        error instanceof Error ? error.message : "Erreur de connexion"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // REGISTER
-const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoginError("");
-
-  if (!credentials.email || !credentials.username || !credentials.passwordHash) {
-    setLoginError("Veuillez remplir tous les champs");
-    return;
-  }
-
-  if (credentials.passwordHash.length < 8) {
-    setLoginError("Le mot de passe doit contenir au moins 8 caractères");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    // 1. Create user
-    await authService.register({
-      email: credentials.email,
-      username: credentials.username,
-      passwordHash: credentials.passwordHash,
-    });
-
-    // 3. Now the cookie exists
-    setCredentials({ email: "", passwordHash: "", username: "" });
-    setIsRegistering(false);
-
-  } catch (error) {
-    setLoginError(
-      error instanceof Error ? error.message : "Erreur lors de l'inscription"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
-
   // LOGOUT
   const handleLogout = () => {
     authService.logout();
     setIsLoggedIn(false);
-    setCredentialsLogin({ email: "", password: "" });
   };
 
   // LOADING SCREEN
@@ -123,156 +43,20 @@ const handleRegister = async (e: React.FormEvent) => {
 
   // LOGIN / REGISTER SCREEN
   if (!isLoggedIn) {
+    if (isRegistering) {
+      return (
+        <Register
+          onRegisterSuccess={() => setIsLoggedIn(true)}
+          onSwitchToLogin={() => setIsRegistering(false)}
+        />
+      );
+    }
+
     return (
-      <>
-        <HalloweenBackground />
-        <div className="min-h-dvh flex items-center justify-center text-white">
-          <div className="w-full max-w-md p-8 rounded-lg bg-black/60 backdrop-blur border border-orange-500/40">
-            <h1 className="text-3xl font-bold text-center mb-2 text-orange-400">
-              🎃 Bienvenue
-            </h1>
-            <p className="text-center text-sm text-gray-400 mb-8">
-              {isRegistering ? "Créer un nouveau compte" : "Se connecter"}
-            </p>
-
-            <form
-              onSubmit={isRegistering ? handleRegister : handleLogin}
-              className="space-y-4"
-            >
-              {isRegistering && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-yellow-300">
-                      Nom d'utilisateur
-                    </label>
-                    <input
-                      type="text"
-                      value={credentials.username}
-                      onChange={(e) =>
-                        setCredentials({
-                          ...credentials,
-                          username: e.target.value,
-                        })
-                      }
-                      placeholder="votre_pseudo"
-                      className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-yellow-300">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={credentials.email}
-                      onChange={(e) =>
-                        setCredentials({
-                          ...credentials,
-                          email: e.target.value,
-                        })
-                      }
-                      placeholder="votre@email.com"
-                      className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-yellow-300">
-                      Mot de passe
-                    </label>
-                    <input
-                      type="password"
-                      value={credentials.passwordHash}
-                      onChange={(e) =>
-                        setCredentials({
-                          ...credentials,
-                          passwordHash: e.target.value,
-                        })
-                      }
-                      placeholder="••••••••"
-                      className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-                </>
-              )}
-
-              {!isRegistering && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-yellow-300">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={credentialsLogin.email}
-                      onChange={(e) =>
-                        setCredentialsLogin({
-                          ...credentialsLogin,
-                          email: e.target.value,
-                        })
-                      }
-                      placeholder="votre@email.com"
-                      className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-yellow-300">
-                      Mot de passe
-                    </label>
-                    <input
-                      type="password"
-                      value={credentialsLogin.password}
-                      onChange={(e) =>
-                        setCredentialsLogin({
-                          ...credentialsLogin,
-                          password: e.target.value,
-                        })
-                      }
-                      placeholder="••••••••"
-                      className="w-full px-4 py-2 rounded bg-black/40 border border-orange-500/20 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                    />
-                  </div>
-                </>
-              )}
-
-              {loginError && (
-                <div className="p-3 rounded bg-red-500/20 border border-red-500 text-red-300 text-sm">
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading
-                  ? isRegistering
-                    ? "Inscription..."
-                    : "Connexion..."
-                  : isRegistering
-                  ? "S'inscrire"
-                  : "Se connecter"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(!isRegistering);
-                  setLoginError("");
-                }}
-                className="w-full px-4 py-2 text-sm text-gray-300 hover:text-orange-400 transition-colors"
-              >
-                {isRegistering
-                  ? "Vous avez un compte ? Se connecter"
-                  : "Pas de compte ? S'inscrire"}
-              </button>
-            </form>
-          </div>
-        </div>
-      </>
+      <Login
+        onLoginSuccess={() => setIsLoggedIn(true)}
+        onSwitchToRegister={() => setIsRegistering(true)}
+      />
     );
   }
 

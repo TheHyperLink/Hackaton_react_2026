@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import UserNotes from "./components/UserNotes";
 import HalloweenBackground from "./components/background/HalloweenBackground";
-import Login from "./components/loginConnexion_component/Login";
-import Register from "./components/loginConnexion_component/Register";
+import Login from "./components/loginConnexion_components/Login";
+import Register from "./components/loginConnexion_components/Register";
 import { authService } from "./services";
 
 

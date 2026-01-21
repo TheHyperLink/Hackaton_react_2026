@@ -54,11 +54,35 @@ export class NoteService {
     return this.apiClient.put<void>(`/notes/${request.id}`, request);
   }
 
-    
-async exportPdf(id: number): Promise<Blob> {
+  /**
+   * Export PDF - Méthode 1 : GET simple (si le backend stocke déjà le bon format)
+   * GET /export/pdf/{id}
+   */
+  public async exportPdf(id: number): Promise<Blob> {
     return this.apiClient.get<Blob>(`/export/pdf/${id}`, undefined, "blob");
   }
-  
+
+  /**
+   * Export PDF - Méthode 2 : POST avec contenu Markdown
+   * POST /export/pdf/{id}
+   * Utile si vous voulez envoyer le contenu converti en Markdown au backend
+   */
+  public async exportPdfWithContent(id: number, markdownContent: string): Promise<Blob> {
+    return this.apiClient.post<Blob>(
+      `/export/pdf/${id}`,
+      { content: markdownContent },
+      "blob"
+    );
+  }
+
+  /**
+   * Export ZIP de toutes les notes
+   * GET /export/zip
+   */
+  public async exportZip(): Promise<Blob> {
+    return this.apiClient.get<Blob>("/export/zip", undefined, "blob");
+  }
+
   /**
    * Supprime une note
    * DELETE /notes/{id}
@@ -66,12 +90,6 @@ async exportPdf(id: number): Promise<Blob> {
   public async deleteNote(id: number): Promise<void> {
     return this.apiClient.delete<void>(`/notes/${id}`);
   }
-
-  async exportZip(): Promise<Blob> {
-  return this.apiClient.get<Blob>("/export/zip", undefined, "blob");
 }
-}
-
-
 
 export const noteService = new NoteService();

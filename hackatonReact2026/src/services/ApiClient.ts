@@ -1,4 +1,4 @@
-// Service API de base - Client HTTP rÃ©utilisable
+// Service API de base - Client HTTP réutilisable
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string) || "http://localhost:8080/api";
@@ -77,9 +77,13 @@ export class ApiClient {
   }
 
   /**
-   * POST JSON
+   * POST JSON - Support des réponses JSON ou Blob
    */
-  public async post<T>(endpoint: string, data?: unknown): Promise<T> {
+  public async post<T>(
+    endpoint: string, 
+    data?: unknown,
+    responseType: "json" | "blob" = "json"
+  ): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "POST",
       headers: this.getJsonHeaders(),
@@ -100,13 +104,22 @@ export class ApiClient {
       throw error;
     }
 
+    // Si on attend un blob (par exemple pour un PDF)
+    if (responseType === "blob") {
+      return (await response.blob()) as T;
+    }
+
     return response.json();
   }
 
   /**
-   * PUT JSON
+   * PUT JSON - Support des réponses JSON ou Blob
    */
-  public async put<T>(endpoint: string, data?: unknown): Promise<T | void> {
+  public async put<T>(
+    endpoint: string, 
+    data?: unknown,
+    responseType: "json" | "blob" = "json"
+  ): Promise<T | void> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "PUT",
       headers: this.getJsonHeaders(),
@@ -125,6 +138,11 @@ export class ApiClient {
       error.status = response.status;
       error.url = `${this.baseUrl}${endpoint}`;
       throw error;
+    }
+
+    // Si on attend un blob
+    if (responseType === "blob") {
+      return (await response.blob()) as T;
     }
 
     const contentType = response.headers.get("content-type");

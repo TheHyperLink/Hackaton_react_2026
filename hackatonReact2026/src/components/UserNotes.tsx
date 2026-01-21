@@ -5,6 +5,7 @@ import TipTap from "./notes_components/TipTap"
 
 import {
   getEditorContentJSON,
+  getEditorContentMarkdown,
   setEditorContentJSON,
   setEditorContentMarkdown,
 } from "./../services/TipTapServices"
@@ -27,38 +28,122 @@ export default function UserNotes() {
 
   const reloadFoldersRef = useRef<(() => Promise<void>) | null>(null)
 
-    const exportZip = async () => {
-  try {
-    const blob = await noteService.exportZip();
+  const exportZip = async () => {
+    try {
+      const blob = await noteService.exportZip();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "notes.zip";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur export ZIP:", err);
+      alert("Erreur lors de l'export ZIP");
+    }
+  };
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "notes.zip";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error("Erreur export ZIP:", err);
+  /**
+   * 🔧 Export PDF - Approche robuste avec sauvegarde temporaire
+   */
+  const exportPdf = async () => {
+    if (!selectedNote) return
+
+    // Sauvegarder l'état original
+    const originalContent = selectedNote.content || ""
+    
+    console.log("=" .repeat(60))
+    console.log("🚀 DÉBUT EXPORT PDF")
+    console.log("📝 Note ID:", selectedNote.id)
+    console.log("📄 Titre:", selectedNote.title)
+    console.log("📦 Contenu original (100 premiers caractères):", originalContent.substring(0, 100))
+    console.log("🔍 Type de contenu:", originalContent.startsWith("{") ? "JSON ProseMirror" : "Markdown")
+    
+    try {
+      // Convertir le contenu en Markdown
+      console.log("⏳ Conversion en Markdown...")
+      const markdown = getEditorContentMarkdown()
+      
+      if (!markdown) {
+        console.error("❌ Échec de la conversion en Markdown")
+        alert("Impossible de convertir le contenu en Markdown")
+        return
+      }
+
+      console.log("✅ Markdown généré (200 premiers caractères):")
+      console.log(markdown.substring(0, 200))
+      console.log("📏 Longueur:", markdown.length, "caractères")
+
+      // Étape 1 : Sauvegarder temporairement en Markdown dans la base de données
+      console.log("💾 Sauvegarde temporaire du Markdown dans la base de données...")
+      await noteService.updateNote({
+        id: selectedNote.id,
+        title: selectedNote.title,
+        content: markdown,
+      })
+      console.log("✅ Sauvegarde temporaire réussie")
+
+      // Étape 2 : Générer le PDF via GET
+      console.log("📥 Appel au backend pour générer le PDF...")
+      console.log("🔗 URL:", `/export/pdf/${selectedNote.id}`)
+      const blob = await noteService.exportPdf(selectedNote.id)
+      console.log("✅ PDF reçu, taille:", blob.size, "bytes")
+
+      // Étape 3 : Restaurer immédiatement le contenu JSON original
+      console.log("♻️ Restauration du contenu JSON original...")
+      await noteService.updateNote({
+        id: selectedNote.id,
+        title: selectedNote.title,
+        content: originalContent,
+      })
+      console.log("✅ Contenu restauré")
+
+      // Étape 4 : Télécharger le PDF
+      console.log("💾 Téléchargement du PDF...")
+      downloadBlob(blob, `${selectedNote.title || "note"}.pdf`)
+      console.log("✅ Export PDF réussi!")
+      console.log("=" .repeat(60))
+
+    } catch (err: any) {
+      console.error("=" .repeat(60))
+      console.error("❌ ERREUR LORS DE L'EXPORT PDF")
+      console.error("Type d'erreur:", err.constructor.name)
+      console.error("Message:", err.message)
+      console.error("Status:", err.status)
+      console.error("Stack:", err.stack)
+      console.error("=" .repeat(60))
+      
+      // En cas d'erreur, toujours essayer de restaurer le contenu original
+      try {
+        console.log("♻️ Tentative de restauration du contenu après erreur...")
+        await noteService.updateNote({
+          id: selectedNote.id,
+          title: selectedNote.title,
+          content: originalContent,
+        })
+        console.log("✅ Contenu restauré après erreur")
+      } catch (restoreErr) {
+        console.error("❌ ERREUR CRITIQUE: Impossible de restaurer le contenu original!")
+        console.error(restoreErr)
+      }
+
+      // Afficher l'erreur à l'utilisateur
+      const errorMsg = err.message || "Erreur inconnue"
+      alert(`Erreur lors de l'export PDF:\n${errorMsg}\n\nVérifiez la console (F12) pour plus de détails.`)
+    }
   }
-};
 
-
-    const exportPdf = async () => {
-  if (!selectedNote) return
-
-  try {
-    const blob = await noteService.exportPdf(selectedNote.id)
-
+  /**
+   * Helper pour télécharger un Blob
+   */
+  const downloadBlob = (blob: Blob, filename: string) => {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${selectedNote.title || "note"}.pdf`
+    a.download = filename
     a.click()
     window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error("Erreur export PDF:", err)
   }
-}
 
   /**
    * Helpers: détecter si content est un JSON ProseMirror stringifié
@@ -66,7 +151,6 @@ export default function UserNotes() {
   function tryParseJSON(content: string): any | null {
     if (!content) return null
     const trimmed = content.trim()
-    // petit guard: si ça ne commence pas par { ou [, on évite parse
     if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return null
     try {
       return JSON.parse(trimmed)
@@ -81,10 +165,8 @@ export default function UserNotes() {
 
     const loadNoteContent = async () => {
       try {
-        // Charger les données complètes de la note pour obtenir les métadonnées
         const fullNoteDetail = await noteService.getNoteById(selectedNote.id)
         
-        // Mettre à jour selectedNote avec les métadonnées
         setSelectedNote(prev => prev ? {
           ...prev,
           sizeBytes: fullNoteDetail.sizeBytes,
@@ -96,25 +178,18 @@ export default function UserNotes() {
         const noteContent = selectedNote.content ?? ""
         setLastSavedContent(noteContent)
 
-        // Empêche autosave / modifications pendant qu'on injecte le contenu
         isLoadingRef.current = true
         isModifiedRef.current = false
 
-        // On attend que TipTap soit prêt (registerEditor exécuté)
         setTimeout(() => {
           const parsed = tryParseJSON(noteContent)
 
           if (parsed) {
-            // ✅ Nouveau format : JSON
             setEditorContentJSON(parsed)
           } else {
-            // 🔁 Ancien format : Markdown (migration douce)
-            // Ça affichera correctement (mais compressera les \n vides), puis
-            // dès que tu sauvegardes, ça repassera en JSON.
             setEditorContentMarkdown(noteContent)
           }
 
-          // stop loading + reset modified
           setTimeout(() => {
             isModifiedRef.current = false
             isLoadingRef.current = false
@@ -149,12 +224,10 @@ export default function UserNotes() {
         content: contentToStore,
       })
 
-      // Mettre à jour le state selectedNote avec le nouveau contenu
       setSelectedNote(prev => (prev ? { ...prev, content: contentToStore } : null))
       setLastSavedContent(contentToStore)
       isModifiedRef.current = false
 
-      // Recharger les données complètes pour mettre à jour les métadonnées
       const fullNoteDetail = await noteService.getNoteById(selectedNote.id)
       setSelectedNote(prev => prev ? {
         ...prev,
@@ -179,9 +252,7 @@ export default function UserNotes() {
     }
   }
 
-  // Debounce : sauvegarde automatique 1.5 secondes après la fin de la modification
   const triggerAutoSave = () => {
-    // ✅ important: ne pas autosave pendant un setContent (load)
     if (isLoadingRef.current) return
     if (!isEditable) return
 
@@ -195,7 +266,6 @@ export default function UserNotes() {
     }, 1500)
   }
 
-  // Nettoyage au démontage
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
@@ -204,13 +274,11 @@ export default function UserNotes() {
 
   return (
     <div className="flex min-h-dvh w-full">
-      {/* Panneau de gauche : FileTree */}
       <FileTree
         onReloadRequest={reloadFn => {
           reloadFoldersRef.current = reloadFn
         }}
         onNoteClick={(note: NoteNode) => {
-          // Sauvegarder la note précédente si elle a été modifiée
           if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current)
             autoSave()
@@ -219,13 +287,10 @@ export default function UserNotes() {
         }}
       />
 
-      {/* Panneau de droite : zone de notes */}
       <div className="flex-1 p-4 flex flex-col">
-        {/* Barre en haut : titre + boutons */}
         <div className="flex items-center justify-between mb-4">
           <h2 className={`text-2xl font-bold ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>
             Spookpad en mode {isEditable ? "édition" : "lecture seule"}
-            
           </h2>
         
           <div className="flex gap-2 items-center">
@@ -243,26 +308,31 @@ export default function UserNotes() {
             >
               {isEditable ? "Lecture seule" : "Édition"}
             </button>
-                <button
-              className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer"
+            
+            <button
+              className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer disabled:bg-gray-600 disabled:cursor-not-allowed"
               onClick={exportPdf}
               disabled={!selectedNote}
+              title={!selectedNote ? "Sélectionnez une note" : "Exporter en PDF"}
             >
-              Export PDF
+              📄 Export PDF
             </button>
 
-                        <button className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer" onClick={exportZip}>Exporter toutes les notes (ZIP)</button>
+            <button 
+              className="px-3 py-1 rounded bg-green-700 hover:bg-green-600 text-sm hover:cursor-pointer" 
+              onClick={exportZip}
+              title="Exporter toutes les notes"
+            >
+              📦 Export ZIP
+            </button>
           </div>
         </div>
 
-        {/* Conteneur principal du contenu */}
         <div className="flex-1 flex flex-col text-white">
-          {/* Titre de la note sélectionnée */}
           <div className="px-4 pb-2 border-b border-orange-500/40">
             {selectedNote ? (
               <div>
                 <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
-                {/* Métadonnées */}
                 <div className="mt-2 flex gap-4 text-xs text-gray-400">
                   {selectedNote.sizeBytes !== undefined && (
                     <span>📦 {(selectedNote.sizeBytes / 1024).toFixed(2)} KB</span>
@@ -283,7 +353,6 @@ export default function UserNotes() {
             )}
           </div>
 
-          {/* Zone de texte Tiptap */}
           <div className="flex-1 p-4 overflow-hidden" onInput={triggerAutoSave}>
             <TipTap editable={isEditable} />
           </div>

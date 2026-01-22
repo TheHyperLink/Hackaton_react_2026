@@ -18,7 +18,7 @@ export class AuthService {
    */
   public async login(request: LoginRequest): Promise<AuthResponse> {
     const response = await this.apiClient.post<AuthResponse>("/auth/login", request);
-    console.log("✅ Connexion réussie, token reçu dans le cookie");
+    console.log("Connexion réussie, token reçu dans le cookie");
     return response;
   }
 
@@ -28,7 +28,7 @@ export class AuthService {
    */
   public async register(request: RegisterRequest): Promise<AuthResponse> {
     const response = await this.apiClient.post<AuthResponse>("/users", request);
-    console.log("✅ Inscription réussie, token reçu dans le cookie");
+    console.log("Inscription réussie, token reçu dans le cookie");
     return response;
   }
 

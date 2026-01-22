@@ -1,9 +1,12 @@
 import "../../style/halloween-bg.css"
 import { useMemo } from "react"
 
+// Nombre de chauves-souris à afficher
 const BAT_COUNT = 15;
+// Génère un nombre aléatoire entre a et b
 const rnd = (a: number, b: number) => Math.random() * (b - a) + a;
 
+// Affiche le fond animé d'Halloween (lune + chauves-souris)
 export default function HalloweenBackground() {
   // Générer les positions des chauves-souris une seule fois, au montage
   const bats = useMemo(() => {

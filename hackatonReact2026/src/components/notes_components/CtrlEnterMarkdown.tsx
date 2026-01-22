@@ -2,6 +2,7 @@ import { Extension } from "@tiptap/core"
 import type { Node as ProseNode } from "prosemirror-model"
 import type { EditorState } from "prosemirror-state"
 
+// Représente un bloc de texte dans le document
 type TextblockEntry = {
   start: number
   end: number
@@ -13,6 +14,7 @@ type TextblockEntry = {
  * - Row: | a | b |
  * - Separator: | --- | --- |
  */
+// Vérifie si une ligne ressemble à une ligne de tableau Markdown
 function looksLikeTableLine(text: string) {
   const t = text.trim()
   const rowLike = /^\|.*\|$/.test(t)
@@ -24,6 +26,7 @@ function looksLikeTableLine(text: string) {
  * Collect ALL textblocks (paragraphs, headings, list item paragraphs, etc.)
  * in document order, so we can expand around cursor globally.
  */
+// Récupère tous les textblocks du document TipTap
 function collectTextblocks(state: EditorState): TextblockEntry[] {
   const entries: TextblockEntry[] = []
   const { doc } = state
@@ -45,6 +48,7 @@ function collectTextblocks(state: EditorState): TextblockEntry[] {
  * Find the range [from, to] of consecutive textblocks around cursor
  * that look like markdown table lines, across the entire document.
  */
+// Trouve la plage de lignes Markdown à convertir en tableau (global)
 function findMarkdownTableRangeDocWise(state: EditorState) {
   const entries = collectTextblocks(state)
   if (entries.length === 0) return null

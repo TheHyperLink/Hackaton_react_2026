@@ -104,7 +104,7 @@ export class ApiClient {
       throw error;
     }
 
-    // Si on attend un blob (par exemple pour un PDF)
+    // Si on attend un blob (pour un PDF)
     if (responseType === "blob") {
       return (await response.blob()) as T;
     }
@@ -140,7 +140,7 @@ export class ApiClient {
       throw error;
     }
 
-    // Si on attend un blob
+    // Si on attend un blob (pour un PDF)
     if (responseType === "blob") {
       return (await response.blob()) as T;
     }

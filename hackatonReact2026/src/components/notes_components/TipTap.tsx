@@ -26,6 +26,7 @@ type TiptapProps = {
 }
 
 export default function Tiptap({ editable = true, onEditorUpdate }: TiptapProps) {
+  // Stocke la liste des notes pour la complétion @mention
   const notesRef = useRef<Array<{ id: number; title: string }>>([])
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function Tiptap({ editable = true, onEditorUpdate }: TiptapProps)
     }
   }, [])
 
+  // Instance de l'éditeur TipTap
   const editor = useEditor({
     extensions: [
       // ✅ StarterKit allégé (Markdown gère les listes)

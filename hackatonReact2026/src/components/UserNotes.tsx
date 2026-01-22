@@ -14,18 +14,27 @@ import type { NoteNode } from "../types/NoteNode"
 import { noteService } from "../services"
 
 export default function UserNotes() {
+  // État d'édition de l'éditeur
   const [isEditable, setIsEditable] = useState(true)
+  // Note sélectionnée
   const [selectedNote, setSelectedNote] = useState<NoteNode | null>(null)
 
+  // Indique si une sauvegarde est en cours
   const [saving, setSaving] = useState(false)
+  // Statut de la sauvegarde automatique
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 
+  // Dernier contenu sauvegardé
   const [lastSavedContent, setLastSavedContent] = useState<string>("")
 
+  // Timer pour le debouncing de l'autosave
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Indique si la note a été modifiée
   const isModifiedRef = useRef(false)
+  // Indique si une opération de chargement est en cours
   const isLoadingRef = useRef(false)
 
+  // Permet de déclencher un reload des dossiers depuis un composant enfant
   const reloadFoldersRef = useRef<(() => Promise<void>) | null>(null)
 
   const exportZip = async () => {

@@ -50,7 +50,7 @@ function tryParseProseMirrorJSON(input: string): JSONContent | null {
    ========================== */
 
 /**
- * ✅ Nouveau: injecter du JSON ProseMirror (source de vérité)
+ * Nouveau: injecter du JSON ProseMirror (source de vérité)
  * Préserve les lignes vides, etc.
  */
 export function setEditorContentJSON(json: JSONContent) {
@@ -59,7 +59,7 @@ export function setEditorContentJSON(json: JSONContent) {
 }
 
 /**
- * (optionnel mais pratique)
+ * 
  * Charge automatiquement: JSON ProseMirror stringifié -> JSON, sinon -> Markdown
  */
 export function setEditorContentAuto(content: string) {
@@ -74,7 +74,7 @@ export function setEditorContentAuto(content: string) {
 }
 
 /**
- * ⚠️ Ancien: injecter du Markdown (migration / compat)
+ * Ancien: injecter du Markdown (migration / compat)
  */
 export function setEditorContentMarkdown(markdown: string) {
   if (!editorInstance) return
@@ -94,7 +94,7 @@ export function clearEditor() {
    ========================== */
 
 /**
- * ✅ JSON brut (source de vérité)
+ * JSON brut (source de vérité)
  */
 export function getEditorContentJSON(): JSONContent | null {
   if (!editorInstance) return null
@@ -102,17 +102,17 @@ export function getEditorContentJSON(): JSONContent | null {
 }
 
 /**
- * ✅ Export Markdown amélioré
- * Utilise l'extension Markdown de TipTap pour une conversion propre
+ *  Export Markdown amélioré
+ * Utilise l'extension Markdown de TipTap 
  */
 export function getEditorContentMarkdown(): string | null {
   if (!editorInstance) {
-    console.error("❌ Editor instance n'est pas disponible")
+    console.error("Editor instance n'est pas disponible")
     return null
   }
 
   try {
-    // Méthode 1 : Utiliser l'extension Markdown de TipTap (méthode officielle)
+    // extension Markdown de TipTap
     const markdownExtension = editorInstance.extensionManager.extensions.find(
       ext => ext.name === 'markdown'
     )
@@ -122,7 +122,7 @@ export function getEditorContentMarkdown(): string | null {
       const storage = (markdownExtension as any).storage
       if (storage?.getMarkdown) {
         const md = storage.getMarkdown()
-        // console.log("✅ Markdown extrait via extension:", md.substring(0, 100))
+        // console.log(" Markdown extrait via extension:", md.substring(0, 100))
         return md
       }
       
@@ -130,7 +130,7 @@ export function getEditorContentMarkdown(): string | null {
       if ((markdownExtension as any).options?.serialize) {
         const json = editorInstance.getJSON()
         const md = (markdownExtension as any).options.serialize(json)
-        // console.log("✅ Markdown sérialisé:", md.substring(0, 100))
+        // console.log("Markdown sérialisé:", md.substring(0, 100))
         return md
       }
     }
@@ -139,22 +139,22 @@ export function getEditorContentMarkdown(): string | null {
     const globalStorage = (editorInstance as any).storage?.markdown
     if (globalStorage?.getMarkdown) {
       const md = globalStorage.getMarkdown()
-      // console.log("✅ Markdown du storage global:", md.substring(0, 100))
+      // console.log("Markdown du storage global:", md.substring(0, 100))
       return md
     }
 
     // Méthode 3 : Conversion manuelle (fallback robuste)
-    console.warn("⚠️ Utilisation de la conversion manuelle JSON -> Markdown")
+    console.warn("Utilisation de la conversion manuelle JSON -> Markdown")
     const json = editorInstance.getJSON()
     const md = convertJSONToMarkdown(json)
-    // console.log("✅ Markdown converti manuellement:", md.substring(0, 100))
+    // console.log( Markdown converti manuellement:", md.substring(0, 100))
     return md
   } catch (error) {
-    console.error("❌ Erreur lors de la conversion en Markdown:", error)
+    console.error(" Erreur lors de la conversion en Markdown:", error)
     // En dernier recours, retourner le texte brut
     try {
       const text = editorInstance.getText()
-      console.warn("⚠️ Retour du texte brut (sans formatage):", text.substring(0, 100))
+      console.warn(" Retour du texte brut (sans formatage):", text.substring(0, 100))
       return text
     } catch {
       return null
@@ -167,7 +167,7 @@ export function getEditorContentMarkdown(): string | null {
  */
 function convertJSONToMarkdown(json: JSONContent): string {
   if (!json || !json.content) {
-    console.warn("⚠️ JSON vide ou invalide")
+    console.warn(" JSON vide ou invalide")
     return ""
   }
 

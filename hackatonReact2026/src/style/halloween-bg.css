@@ -3,7 +3,7 @@
 @property --tx { syntax: '<length-percentage>'; inherits: false; initial-value: 0vw; }
 @property --ty { syntax: '<length-percentage>'; inherits: false; initial-value: 0vh; }
 @property --sc { syntax: '<number>';            inherits: false; initial-value: 1; }
-@property --fl { syntax: '<number>';            inherits: false; initial-value: 0; } /* optionnel si tu veux mixer rotation+scaleY */
+@property --fl { syntax: '<number>';            inherits: false; initial-value: 0; } 
 
 /* --- Conteneur plein écran (derrière l'app) --- */
 .halloween-bg {
@@ -29,7 +29,7 @@
   will-change: transform;
 
   /* 2 animations: fly (wrapper) + flap (ailes via sélecteurs internes) */
-  animation-name: fly, none;            /* 'flap' n'est pas sur le wrapper */
+  animation-name: fly, none;         
   animation-timing-function: linear, ease-in-out;
   animation-iteration-count: infinite, infinite;
 

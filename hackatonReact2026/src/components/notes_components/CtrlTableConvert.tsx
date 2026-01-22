@@ -2,11 +2,13 @@ import { Extension } from "@tiptap/core"
 import type { EditorState } from "prosemirror-state"
 import type { Node as ProseNode } from "prosemirror-model"
 
+// Vérifie si une ligne ressemble à une ligne de tableau Markdown
 function looksLikeTableLine(text: string) {
     const t = text.trim()
     return /^\|.*\|$/.test(t) || /^\|?\s*:?-{3,}.*$/.test(t)
 }
 
+// Trouve la plage de lignes Markdown à convertir en tableau
 function findMarkdownTableRange(state: EditorState) {
     const { $from } = state.selection
     const depth = $from.depth
@@ -44,36 +46,49 @@ function findMarkdownTableRange(state: EditorState) {
     return { from, to }
 }
 
+// Extension TipTap : conversion rapide d'un tableau Markdown en tableau TipTap
+// Extension TipTap pour la conversion rapide Markdown -> tableau
 const CtrlEnterTableConvert = Extension.create({
     name: "ctrlEnterTableConvert",
 
     addKeyboardShortcuts() {
+        // Raccourci clavier pour convertir le markdown en tableau
         return {
             // IMPORTANT: avoid conflict with CtrlEnterMarkdown if it uses Ctrl-Enter
             "Shift-Ctrl-Enter": () => {
+                // Instance de l'éditeur TipTap
                 const editor = this.editor
                 if (!editor?.isEditable) return false
 
+                // État courant de l'éditeur
                 const { state } = editor
+                // Schéma ProseMirror (types de noeuds)
                 const schema = state.schema
 
+                // Plage à convertir
                 const { from, to } = findMarkdownTableRange(state)
+                // Texte brut à convertir
                 const raw = state.doc.textBetween(from, to, "\n", "\n")
 
+                // Lignes du tableau markdown
                 const lines = raw
                     .split("\n")
                     .map(l => l.trim())
                     .filter(Boolean)
 
+                // Index du séparateur de l'en-tête
                 const sepIndex = lines.findIndex(l => /^\|?\s*:?-{3,}/.test(l))
                 if (sepIndex <= 0) return false
 
+                // Parse une ligne de tableau markdown en cellules
                 const parseRow = (line: string) =>
                     line.replace(/^\||\|$/g, "").split("|").map(c => c.trim())
 
+                // Cellules d'en-tête et lignes du corps
                 const headerCells = parseRow(lines[sepIndex - 1])
                 const bodyRows = lines.slice(sepIndex + 1).map(parseRow)
 
+                // Types de noeuds pour la construction du tableau
                 const { table, tableRow, tableCell, tableHeader, paragraph } = schema.nodes
                 if (!table || !tableRow || !tableCell || !tableHeader || !paragraph) return false
 

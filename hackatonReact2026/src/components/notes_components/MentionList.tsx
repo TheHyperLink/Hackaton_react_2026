@@ -14,9 +14,13 @@ type Props = {
     command: (item: MentionItem) => void
 }
 
+// Liste de suggestions pour @mention dans TipTap
 const MentionList = React.forwardRef<MentionListRef, Props>((props, ref) => {
+    // Liste des suggestions à afficher
     const { items = [], command, editor, range } = props
+    // Index de la suggestion sélectionnée
     const [index, setIndex] = useState(0)
+    // Référence vers la div de la liste
     const listRef = useRef<HTMLDivElement | null>(null)
 
     useImperativeHandle(ref, () => ({

@@ -28,13 +28,17 @@ export function FileItem({
   onDeleteFolder,
   onDeleteNote,
 }: FileItemProps) {
+  // État d'ouverture/fermeture du dossier
   const [open, setOpen] = useState(false);
+  // Position du menu contextuel dossier
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  // Position du menu contextuel note
   const [noteContextMenu, setNoteContextMenu] = useState<{
     x: number;
     y: number;
     note: NoteNode;
   } | null>(null);
+  // État du dialog pour création/renommage dossier/note
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
     type: "createFolder" | "createNote" | "renameFolder" | "renameNote";
@@ -46,12 +50,14 @@ export function FileItem({
     type: "createFolder",
   });
 
+  // Ouvre le menu contextuel dossier
   const handleFolderContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
+  // Actions menu contextuel dossier
   const handleFolderMenuItems = (): MenuItem[] => {
     // Ne pas afficher le menu pour le dossier Root
     if (node.isRoot) {
@@ -105,6 +111,7 @@ export function FileItem({
     ];
   };
 
+  // Actions menu contextuel note
   const handleNoteMenuItems = (note: NoteNode): MenuItem[] => [
     {
       label: "Renommer la note",
@@ -129,6 +136,7 @@ export function FileItem({
     },
   ];
 
+  // Gère la validation des dialogues (création/renommage)
   const handleDialogConfirm = (value: string, color?: string) => {
     const { type, targetId } = dialogState;
     switch (type) {

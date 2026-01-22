@@ -15,6 +15,7 @@ type ContextMenuProps = {
 };
 
 export function ContextMenu({ position, items, onClose }: ContextMenuProps) {
+  // Gère la fermeture du menu contextuel (clic extérieur ou touche Échap)
   React.useEffect(() => {
     const handleClickOutside = () => onClose();
     const handleEscape = (e: KeyboardEvent) => {

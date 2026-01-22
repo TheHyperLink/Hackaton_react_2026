@@ -13,15 +13,21 @@ type FileTreeProps = {
 };
 
 export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
+  // Liste des dossiers affichés
   const [folderList, setFolderList] = useState<FileNode[]>([]);
+  // Indique si les dossiers sont en cours de chargement
   const [loading, setLoading] = useState(true);
+  // Message d'erreur éventuel
   const [error, setError] = useState<string | null>(null);
+  // Position du menu contextuel racine
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  // Position du menu contextuel pour une note du root
   const [noteContextMenu, setNoteContextMenu] = useState<{
     x: number;
     y: number;
     note: NoteNode;
   } | null>(null);
+  // État du dialog pour création dossier/note à la racine
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
     type: "createFolder" | "createNote";
@@ -30,6 +36,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     isOpen: false,
     type: "createFolder",
   });
+  // État du dialog pour renommer/supprimer une note du root
   const [noteDialogState, setNoteDialogState] = useState<{
     isOpen: boolean;
     type: "renameNote" | "deleteNote";
@@ -40,7 +47,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     type: "renameNote",
   });
 
-  // Fonction pour recharger les dossiers
+  // Recharge les dossiers depuis l'API
   const reloadFolders = async () => {
     try {
       setError(null);
@@ -84,6 +91,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
   }, [onReloadRequest]);
 
   // Fonction de conversion FolderDetail -> FileNode
+  // Convertit un objet FolderDetail (API) en FileNode (UI)
   const convertFolderDetailToFileNode = (folderDetail: any): FileNode => {
     return {
       id: folderDetail.id,
@@ -101,16 +109,19 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     };
   };
 
+  // Ouvre le menu contextuel sur la racine
   const handleRootContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
+  // Retourne le dossier racine
   const getRootFolder = (): FileNode | undefined => {
     return folderList.find(folder => folder.isRoot === true);
   };
 
+  // Actions du menu contextuel racine
   const handleRootMenuItems = (): MenuItem[] => {
     const rootFolder = getRootFolder();
     const rootFolderId = rootFolder?.id;
@@ -138,6 +149,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     ];
   };
 
+  // Actions du menu contextuel pour une note du root
   const handleRootNoteMenuItems = (note: NoteNode): MenuItem[] => [
     {
       label: "Renommer la note",
@@ -162,6 +174,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     },
   ];
 
+  // Crée un dossier dans la structure locale et côté API
   const handleCreateFolder = async (parentFolderId: number, name: string, color: string = "yellow") => {
     try {
       const newFolderDetail = await folderService.createFolder({
@@ -194,6 +207,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Crée une note dans la structure locale et côté API
   const handleCreateNote = async (folderId: number, title: string) => {
     try {
       const newNote = await noteService.createNote({
@@ -226,6 +240,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Renomme un dossier (local + API)
   const handleRenameFolder = async (folderId: number, newName: string, newColor?: string) => {
     try {
       await folderService.updateFolder({
@@ -262,6 +277,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Renomme une note (local + API)
   const handleRenameNote = async (noteId: number, newTitle: string) => {
     try {
       await noteService.updateNote({
@@ -288,6 +304,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Supprime un dossier (local + API)
   const handleDeleteFolder = async (folderId: number) => {
     try {
       await folderService.deleteFolder(folderId);
@@ -320,6 +337,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Supprime une note (local + API)
   const handleDeleteNote = async (noteId: number) => {
     try {
       await noteService.deleteNote(noteId);
@@ -343,6 +361,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     }
   };
 
+  // Gère la validation du dialog racine (création dossier/note)
   const handleDialogConfirm = async (value: string, color?: string) => {
     const { type } = dialogState;
     const rootFolder = getRootFolder();
@@ -385,6 +404,7 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
     setDialogState({ isOpen: false, type: "createFolder" });
   };
 
+  // Gère la validation du dialog pour renommer une note du root
   const handleNoteDialogConfirm = async (value: string) => {
     const { type, targetNote } = noteDialogState;
 

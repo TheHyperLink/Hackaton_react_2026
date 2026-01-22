@@ -15,6 +15,7 @@ type InputDialogProps = {
   isFolderDialog?: boolean;
 };
 
+// Liste des couleurs de dossier disponibles
 const FOLDER_COLORS: { color: FolderColor; label: string }[] = [
   { color: "yellow", label: "Jaune" },
   { color: "red", label: "Rouge" },
@@ -23,6 +24,7 @@ const FOLDER_COLORS: { color: FolderColor; label: string }[] = [
   { color: "pink", label: "Rose" },
 ];
 
+// Retourne la couleur hexadécimale associée à un nom de couleur
 const getColorValue = (color: FolderColor): string => {
   const colorMap: Record<FolderColor, string> = {
     yellow: "#fbbf24",
@@ -45,8 +47,11 @@ export function InputDialog({
   type = "create",
   isFolderDialog = false,
 }: InputDialogProps) {
+  // Valeur du champ texte
   const [value, setValue] = useState(defaultValue);
+  // Couleur sélectionnée pour le dossier
   const [selectedColor, setSelectedColor] = useState<FolderColor>(defaultColor);
+  // Référence vers l'input pour focus/sélection
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

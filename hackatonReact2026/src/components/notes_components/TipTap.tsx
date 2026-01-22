@@ -47,6 +47,7 @@ export default function Tiptap({ editable = true }: TiptapProps) {
       Link.configure({
         autolink: true,
         openOnClick: false,
+        linkOnPaste: true
       }),
 
       Underline,
@@ -91,6 +92,8 @@ export default function Tiptap({ editable = true }: TiptapProps) {
           p-4
           text-white
           outline-none
+          [&_a]:text-blue-400
+          [&_a]:underline 
           [&_.ProseMirror]:h-full
         "
       />

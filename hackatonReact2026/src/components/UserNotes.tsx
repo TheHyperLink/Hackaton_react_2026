@@ -398,6 +398,7 @@ function wrapMarkdown(before: string, after: string = before) {
           await noteService.deleteNote(selectedNote.id);
           setSelectedNote(null);
           reloadFoldersRef.current?.();
+          window.location.reload();
         }
       } // F2 → Rename selected note
       if (e.key === "F2") {
@@ -453,7 +454,7 @@ function wrapMarkdown(before: string, after: string = before) {
       // Ctrl + Alt + C → Code block
       if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
-        insertMarkdown("\n```\n\n```\n");
+        insertMarkdown("\n```\n");
       }
       // Ctrl + Shift + 8 → Bullet list
       if (e.ctrlKey && e.shiftKey && e.key === "8") {

@@ -13,6 +13,10 @@ export interface ExternalLink {
 }
 
 export interface NoteDetail {
+  userId: number | undefined;
+  folderId: number | undefined;
+  createdAt: string;
+  updatedAt: string;
   id: number;
   title: string;
   content: string;

@@ -122,7 +122,7 @@ export function getEditorContentMarkdown(): string | null {
       const storage = (markdownExtension as any).storage
       if (storage?.getMarkdown) {
         const md = storage.getMarkdown()
-        console.log("✅ Markdown extrait via extension:", md.substring(0, 100))
+        // console.log("✅ Markdown extrait via extension:", md.substring(0, 100))
         return md
       }
       
@@ -130,7 +130,7 @@ export function getEditorContentMarkdown(): string | null {
       if ((markdownExtension as any).options?.serialize) {
         const json = editorInstance.getJSON()
         const md = (markdownExtension as any).options.serialize(json)
-        console.log("✅ Markdown sérialisé:", md.substring(0, 100))
+        // console.log("✅ Markdown sérialisé:", md.substring(0, 100))
         return md
       }
     }
@@ -139,7 +139,7 @@ export function getEditorContentMarkdown(): string | null {
     const globalStorage = (editorInstance as any).storage?.markdown
     if (globalStorage?.getMarkdown) {
       const md = globalStorage.getMarkdown()
-      console.log("✅ Markdown du storage global:", md.substring(0, 100))
+      // console.log("✅ Markdown du storage global:", md.substring(0, 100))
       return md
     }
 
@@ -147,7 +147,7 @@ export function getEditorContentMarkdown(): string | null {
     console.warn("⚠️ Utilisation de la conversion manuelle JSON -> Markdown")
     const json = editorInstance.getJSON()
     const md = convertJSONToMarkdown(json)
-    console.log("✅ Markdown converti manuellement:", md.substring(0, 100))
+    // console.log("✅ Markdown converti manuellement:", md.substring(0, 100))
     return md
   } catch (error) {
     console.error("❌ Erreur lors de la conversion en Markdown:", error)

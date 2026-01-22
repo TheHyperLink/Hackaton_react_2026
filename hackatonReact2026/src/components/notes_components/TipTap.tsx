@@ -26,9 +26,7 @@ export default function Tiptap({ editable = true }: TiptapProps) {
       // ✅ StarterKit allégé (Markdown gère les listes)
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
+        // On ne met PAS bulletList/orderedList/listItem pour les activer (par défaut true)
       }),
 
       // ✅ Markdown

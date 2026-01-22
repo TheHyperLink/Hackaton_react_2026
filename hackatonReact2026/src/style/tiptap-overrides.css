@@ -1,3 +1,77 @@
+
+/* Blockquotes (>) */
+.ProseMirror blockquote {
+  border-left: 4px solid #fbbf24;
+  background: rgba(251,191,36,0.08);
+  color: #fbbf24;
+  margin: 1em 0;
+  padding: 0.7em 1.2em;
+  border-radius: 0.5em;
+  font-style: italic;
+  font-size: 1.08em;
+}
+
+/* Blocs de code (codeblock) */
+.ProseMirror pre {
+  background: #18181b;
+  color: #facc15;
+  border-radius: 0.6em;
+  padding: 1em 1.2em;
+  font-size: 1em;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+  overflow-x: auto;
+  margin: 1em 0;
+  border: 1.5px solid #27272a;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+}
+.ProseMirror code {
+  background: #27272a;
+  color: #facc15;
+  border-radius: 0.3em;
+  padding: 0.15em 0.4em;
+  font-size: 0.98em;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+}
+
+/* Titres Markdown (ProseMirror) */
+.ProseMirror h1 {
+  font-size: 2.2em;
+  font-weight: 700;
+  margin: 1.1em 0 0.6em 0;
+  color: #fbbf24;
+  border-bottom: 2px solid #fbbf24;
+  padding-bottom: 0.15em;
+}
+.ProseMirror h2 {
+  font-size: 1.6em;
+  font-weight: 600;
+  margin: 1em 0 0.5em 0;
+  color: #f59e42;
+  border-bottom: 1.5px solid #f59e42;
+  padding-bottom: 0.12em;
+}
+.ProseMirror h3 {
+  font-size: 1.25em;
+  font-weight: 500;
+  margin: 0.8em 0 0.4em 0;
+  color: #f472b6;
+}
+
+/* Affichage correct des listes à puces et numérotées dans TipTap */
+.ProseMirror ul,
+.ProseMirror ol {
+  margin-left: 1.5em;
+  padding-left: 1.2em;
+}
+.ProseMirror ul {
+  list-style-type: disc;
+}
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+.ProseMirror li {
+  margin-bottom: 0.2em;
+}
 .ProseMirror:focus {
   outline: none !important;
   box-shadow: none !important;

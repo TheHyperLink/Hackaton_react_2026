@@ -1,8 +1,7 @@
-
 /* Blockquotes (>) */
 .ProseMirror blockquote {
   border-left: 4px solid #fbbf24;
-  background: rgba(251,191,36,0.08);
+  background: rgba(251, 191, 36, 0.08);
   color: #fbbf24;
   margin: 1em 0;
   padding: 0.7em 1.2em;
@@ -22,8 +21,9 @@
   overflow-x: auto;
   margin: 1em 0;
   border: 1.5px solid #27272a;
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.10);
 }
+
 .ProseMirror code {
   background: #27272a;
   color: #facc15;
@@ -42,6 +42,7 @@
   border-bottom: 2px solid #fbbf24;
   padding-bottom: 0.15em;
 }
+
 .ProseMirror h2 {
   font-size: 1.6em;
   font-weight: 600;
@@ -50,6 +51,7 @@
   border-bottom: 1.5px solid #f59e42;
   padding-bottom: 0.12em;
 }
+
 .ProseMirror h3 {
   font-size: 1.25em;
   font-weight: 500;
@@ -63,15 +65,48 @@
   margin-left: 1.5em;
   padding-left: 1.2em;
 }
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  background: rgba(30, 30, 30, 0.95);
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1.5px solid #fbbf24;
+  padding: 0.5em 0.8em;
+  text-align: left;
+  color: #fff;
+}
+
+.ProseMirror th {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.ProseMirror tr {
+  border-bottom: 1.5px solid #fbbf24;
+}
+
+.ProseMirror tr:last-child {
+  border-bottom: none;
+}
+
 .ProseMirror ul {
   list-style-type: disc;
 }
+
 .ProseMirror ol {
   list-style-type: decimal;
 }
+
 .ProseMirror li {
   margin-bottom: 0.2em;
 }
+
 .ProseMirror:focus {
   outline: none !important;
   box-shadow: none !important;

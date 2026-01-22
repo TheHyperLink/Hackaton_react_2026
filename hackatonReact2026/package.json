@@ -13,6 +13,7 @@
     "@floating-ui/dom": "^1.7.4",
     "@tailwindcss/vite": "^4.1.18",
     "@tiptap/extension-link": "^3.15.3",
+    "@tiptap/extension-mention": "^3.15.3",
     "@tiptap/extension-table": "^3.15.3",
     "@tiptap/extension-task-item": "^3.15.3",
     "@tiptap/extension-task-list": "^3.15.3",
@@ -24,6 +25,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.18",
+    "tippy.js": "^6.3.7",
     "use-sound": "^5.0.0"
   },
   "devDependencies": {

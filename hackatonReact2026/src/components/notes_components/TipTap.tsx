@@ -1,26 +1,60 @@
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import Mention from "@tiptap/extension-mention"
 import { Markdown } from "@tiptap/markdown"
 import Link from "@tiptap/extension-link"
 import Underline from "@tiptap/extension-underline"
 import { TableKit } from "@tiptap/extension-table"
 import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
-import { useEffect } from "react"
 
 import CtrlEnterMarkdown from "./CtrlEnterMarkdown"
 import CtrlEnterTableConvert from "./CtrlTableConvert"
+import "../../style/tiptap-scrollbar.css"
 
 import {
   registerEditor,
   unregisterEditor,
 } from "../../services/TipTapServices"
+import { noteService } from "../../services"
+import { useEffect, useRef } from "react"
+import createMentionSuggestion from "../../services/createMentionSuggestion"
 
 type TiptapProps = {
   editable?: boolean
 }
 
 export default function Tiptap({ editable = true }: TiptapProps) {
+  const notesRef = useRef<Array<{ id: number; title: string }>>([])
+
+  useEffect(() => {
+    let cancelled = false
+      ; (async () => {
+        try {
+          const list = await noteService.getNotes()
+          if (cancelled) return
+
+          // Normalize possible response shapes into an array of notes
+          const raw: any = list
+          let notesArray: any[] = []
+
+          if (Array.isArray(raw)) notesArray = raw
+          else if (raw?.notes) notesArray = raw.notes
+          else if (raw?.items) notesArray = raw.items
+          else if (raw?.results) notesArray = raw.results
+          else if (raw?.data) notesArray = raw.data
+          else notesArray = []
+
+          notesRef.current = (notesArray as any[]).map((n: any) => ({ id: n.id, title: n.title }))
+        } catch (err) {
+          console.error("Erreur chargement notes pour mentions:", err)
+        }
+      })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const editor = useEditor({
     extensions: [
       // ✅ StarterKit allégé (Markdown gère les listes)
@@ -48,6 +82,11 @@ export default function Tiptap({ editable = true }: TiptapProps) {
         linkOnPaste: true
       }),
 
+      // Mention @ -> insert internal note links
+      Mention.configure({
+        suggestion: createMentionSuggestion(() => notesRef.current as any),
+      }),
+
       Underline,
 
       TaskList,
@@ -72,6 +111,48 @@ export default function Tiptap({ editable = true }: TiptapProps) {
     return () => unregisterEditor()
   }, [editor])
 
+  // Intercepter les clics sur les liens à l'intérieur de l'éditeur
+  useEffect(() => {
+    if (!editor) return
+
+    const handler = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null
+      if (!target) return
+      const anchor = target.closest('a') as HTMLAnchorElement | null
+      if (!anchor) return
+
+      const href = anchor.getAttribute('href') || ''
+      const match = href.match(/\/notes\/(\d+)/)
+      if (match) {
+        // Prevent full navigation and stop other handlers (capture phase)
+        try {
+          event.preventDefault()
+        } catch { }
+        try {
+          // stop other listeners
+          event.stopImmediatePropagation()
+        } catch { }
+        try {
+          event.stopPropagation()
+        } catch { }
+
+        const noteId = Number(match[1])
+        // Dispatch a custom event the app can listen to (SPA navigation)
+        window.dispatchEvent(new CustomEvent('spookpad:navigateNote', { detail: { id: noteId } }))
+      }
+    }
+
+    const dom = editor.view?.dom as HTMLElement | undefined
+    // Attach in capture phase to intercept before other listeners
+    dom?.addEventListener('click', handler, { capture: true })
+    dom?.addEventListener('mousedown', handler, { capture: true })
+
+    return () => {
+      dom?.removeEventListener('click', handler, { capture: true })
+      dom?.removeEventListener('mousedown', handler, { capture: true })
+    }
+  }, [editor])
+
   // ✅ Lecture seule / édition
   useEffect(() => {
     editor?.setEditable(editable)
@@ -87,6 +168,7 @@ export default function Tiptap({ editable = true }: TiptapProps) {
         className="
           flex-1
           overflow-auto
+          tiptap-scrollbar
           p-4
           text-white
           outline-none

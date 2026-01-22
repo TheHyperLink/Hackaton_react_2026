@@ -1,0 +1,18 @@
+/*
+  Custom scrollbar for TipTap editor
+  Orange thumb, transparent track, no background
+*/
+.tiptap-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.tiptap-scrollbar::-webkit-scrollbar-thumb {
+    background: orange;
+    border-radius: 8px;
+}
+
+.tiptap-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: orange transparent;
+}

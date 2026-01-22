@@ -64,6 +64,19 @@ export class FolderService {
     const response = await this.getFolders();
     return response.folders;
   }
+
+  public async getRootFolderId(): Promise<number> {
+    const response = await this.apiClient.get<FolderDetail[]>("/folders/roots");
+    const folders = response;
+
+    const root = folders.find(f => f.isRoot);
+    if (!root) {
+      throw new Error("Aucun dossier racine trouvé");
+    }
+
+    return root.id;
+  }
 }
+
 
 export const folderService = new FolderService();

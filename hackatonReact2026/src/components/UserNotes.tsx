@@ -10,10 +10,13 @@ import {
   setEditorContentMarkdown,
 } from "./../services/TipTapServices"
 
+import ShortcutOverlay from "./ShortcutOverlay";
 import type { NoteNode } from "../types/NoteNode"
-import { noteService } from "../services"
+import { folderService, noteService } from "../services"
 
 export default function UserNotes() {
+
+  const [showShortcuts, setShowShortcuts] = useState(false);
   // État d'édition de l'éditeur
   const [isEditable, setIsEditable] = useState(true)
   // Note sélectionnée
@@ -312,6 +315,162 @@ export default function UserNotes() {
     }
   }, [])
 
+function wrapMarkdown(before: string, after: string = before) {
+    const textarea = document.querySelector("textarea");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+
+    const newText =
+      textarea.value.substring(0, start) +
+      before +
+      selected +
+      after +
+      textarea.value.substring(end);
+
+    textarea.value = newText;
+
+    textarea.selectionStart = start + before.length;
+    textarea.selectionEnd = end + before.length;
+  }
+
+  function insertMarkdown(text: string) {
+    const textarea = document.querySelector("textarea");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const newText =
+      textarea.value.substring(0, start) + text + textarea.value.substring(end);
+
+    textarea.value = newText;
+
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+  }
+
+  useEffect(() => {
+    async function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+        return;
+      }
+      // Ctrl + ALT + N → New note
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        const folderId =
+          selectedNote?.folderId || (await folderService.getRootFolderId());
+        await noteService.createNote({
+          folderId,
+          title: "Nouvelle note",
+          content: "",
+        });
+        reloadFoldersRef.current?.();
+      } // Ctrl + Shift + M → New folder
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        const folderId =
+          selectedNote?.folderId || (await folderService.getRootFolderId());
+        await folderService.createFolder({
+          name: "Nouveau dossier",
+          color: "#FF6B6B",
+          parentFolderId: folderId,
+        });
+        reloadFoldersRef.current?.();
+      } // Ctrl + D → Duplicate note
+      if (e.ctrlKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        if (selectedNote) {
+          const folderId =
+            selectedNote.folderId || (await folderService.getRootFolderId());
+          await noteService.createNote({
+            folderId,
+            title: `${selectedNote.title} (copie)`,
+            content: selectedNote.content,
+          });
+          reloadFoldersRef.current?.();
+        }
+      } // Delete → Delete selected note
+      if (e.key === "Delete") {
+        if (selectedNote && confirm("Supprimer cette note ?")) {
+          await noteService.deleteNote(selectedNote.id);
+          setSelectedNote(null);
+          reloadFoldersRef.current?.();
+        }
+      } // F2 → Rename selected note
+      if (e.key === "F2") {
+        if (selectedNote) {
+          const newTitle = prompt("Nouveau titre :", selectedNote.title);
+          if (newTitle?.trim()) {
+            await noteService.updateNote({
+              id: selectedNote.id,
+              title: newTitle,
+              content: selectedNote.content,
+            });
+            reloadFoldersRef.current?.();
+          }
+        }
+      } // Ctrl + P → Export PDF
+      if (e.ctrlKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        exportPdf();
+      }
+      // Ctrl + Shift + P → Export ZIP
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        exportZip();
+      } // Ctrl + E → Toggle edit/read mode
+      if (e.ctrlKey && e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        setIsEditable((prev) => !prev);
+      }
+      // F1 → Toggle shortcut overlay
+      if (e.key === "F1") {
+        e.preventDefault();
+        setShowShortcuts((prev) => !prev);
+      }
+      // Ctrl + B → Bold
+      if (e.ctrlKey && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        wrapMarkdown("**");
+      }
+      // Ctrl + I → Italic
+      if (e.ctrlKey && e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        wrapMarkdown("*");
+      } // Ctrl + U → Underline (Markdown extension)
+      if (e.ctrlKey && e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        wrapMarkdown("__");
+      }
+      // Ctrl + Shift + X → Strikethrough
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "x") {
+        e.preventDefault();
+        wrapMarkdown("~~");
+      }
+      // Ctrl + Alt + C → Code block
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        insertMarkdown("\n```\n\n```\n");
+      }
+      // Ctrl + Shift + 8 → Bullet list
+      if (e.ctrlKey && e.shiftKey && e.key === "8") {
+        e.preventDefault();
+        insertMarkdown("\n- ");
+      }
+      // Ctrl + Shift + 7 → Numbered list
+      if (e.ctrlKey && e.shiftKey && e.key === "7") {
+        e.preventDefault();
+        insertMarkdown("\n1. ");
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedNote]);
+
+
   return (
     <div className="flex min-h-dvh w-full">
       <FileTree
@@ -329,10 +488,11 @@ export default function UserNotes() {
 
       <div className="flex-1 p-4 flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h2 className={`text-2xl font-bold hover:animate-spin ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>
+          <h3 className={`text-2xl font-bold hover:animate-spin ${isEditable ? "text-yellow-500" : "text-purple-300"}`}>
 
             Spookpad en mode {isEditable ? "édition" : "lecture seule"}
-          </h2>
+          </h3>
+          <span className="text-gray-500">Appuyez sur F1 pour voir la liste des raccourcis.</span>
 
           <div className="flex gap-2 items-center">
 
@@ -463,6 +623,11 @@ export default function UserNotes() {
           </div>
         </div>
       </div>
+
+        <ShortcutOverlay
+        visible={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </div>
   )
 }

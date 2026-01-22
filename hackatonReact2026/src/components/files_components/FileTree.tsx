@@ -311,6 +311,9 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
             subFolders: deleteSubfolder(folder.subFolders),
           }))
       );
+
+      // Rafraîchir la page après suppression
+      window.location.reload();
     } catch (err) {
       console.error("Erreur lors de la suppression du dossier:", err);
       setError(err instanceof Error ? err.message : "Erreur lors de la suppression du dossier");
@@ -331,6 +334,9 @@ export function FileTree({ onNoteClick, onReloadRequest }: FileTreeProps) {
       setFolderList(prevFolders =>
         prevFolders.map(folder => deleteNoteRecursive(folder))
       );
+
+      // Rafraîchir la page après suppression
+      window.location.reload();
     } catch (err) {
       console.error("Erreur lors de la suppression de la note:", err);
       setError(err instanceof Error ? err.message : "Erreur lors de la suppression de la note");

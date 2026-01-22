@@ -449,8 +449,8 @@ export default function UserNotes() {
             )}
           </div>
 
-          <div className="flex-1 p-4 overflow-hidden" onInput={triggerAutoSave}>
-            <TipTap editable={isEditable} />
+          <div className="flex-1 p-4 overflow-hidden">
+            <TipTap editable={isEditable} onEditorUpdate={triggerAutoSave} />
           </div>
         </div>
       </div>

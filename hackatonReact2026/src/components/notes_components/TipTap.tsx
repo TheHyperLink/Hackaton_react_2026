@@ -22,9 +22,10 @@ import createMentionSuggestion from "../../services/createMentionSuggestion"
 
 type TiptapProps = {
   editable?: boolean
+  onEditorUpdate?: () => void
 }
 
-export default function Tiptap({ editable = true }: TiptapProps) {
+export default function Tiptap({ editable = true, onEditorUpdate }: TiptapProps) {
   const notesRef = useRef<Array<{ id: number; title: string }>>([])
 
   useEffect(() => {
@@ -102,6 +103,9 @@ export default function Tiptap({ editable = true }: TiptapProps) {
     // contentType: "markdown",  <-- je te conseille de l'enlever sauf si tu es sûr que ton plugin l'utilise.
 
     content: "Choississez une note.",
+    onUpdate: () => {
+      if (onEditorUpdate) onEditorUpdate();
+    },
   })
 
   // ✅ Enregistrement service
@@ -160,8 +164,8 @@ export default function Tiptap({ editable = true }: TiptapProps) {
 
   return (
     <div
-      className={`h-full flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${editable ? "" : "cursor-not-allowed"
-        }`}
+      className={`flex flex-col border border-orange-500/40 rounded-xl bg-black/30 ${editable ? "" : "cursor-not-allowed"}`}
+      style={{ height: "100%", maxHeight: "73vh", minHeight: 0 }}
     >
       <EditorContent
         editor={editor}
@@ -176,6 +180,7 @@ export default function Tiptap({ editable = true }: TiptapProps) {
           [&_a]:underline 
           [&_.ProseMirror]:h-full
         "
+        style={{ height: "100%", maxHeight: "73vh", minHeight: 0 }}
       />
     </div>
   )

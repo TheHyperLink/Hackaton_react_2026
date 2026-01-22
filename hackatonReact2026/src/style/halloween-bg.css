@@ -12,7 +12,7 @@
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background: radial-gradient(120vh 80vh at 50% 120%, #fe5500, #1b0a28 90%);
+  background: radial-gradient(120vh 80vh at 50% 120%, #ff7d3c, #1b0a28 90%);
 }
 
 /* --- Wrapper d'une chauve-souris (trajectoire + profondeur) --- */

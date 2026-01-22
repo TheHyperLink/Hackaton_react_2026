@@ -294,13 +294,6 @@ export default function UserNotes() {
           </h2>
         
           <div className="flex gap-2 items-center">
-            {saveStatus === "saving" && (
-              <span className="text-yellow-400 text-sm flex items-center gap-1">
-                <span className="inline-block animate-spin">⏳</span> Sauvegarde...
-              </span>
-            )}
-            {saveStatus === "saved" && <span className="text-green-400 text-sm">✅ Sauvegardé</span>}
-            {saveStatus === "error" && <span className="text-red-400 text-sm">❌ Erreur</span>}
 
             <button
               className="px-3 py-1 rounded bg-violet-700 hover:bg-violet-600 text-sm hover:cursor-pointer"
@@ -332,21 +325,54 @@ export default function UserNotes() {
           <div className="px-4 pb-2 border-b border-orange-500/40">
             {selectedNote ? (
               <div>
-                <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
-                <div className="mt-2 flex gap-4 text-xs text-gray-400">
-                  {selectedNote.sizeBytes !== undefined && (
-                    <span>📦 {(selectedNote.sizeBytes / 1024).toFixed(2)} KB</span>
-                  )}
-                  {selectedNote.charCount !== undefined && (
-                    <span>🔤 {selectedNote.charCount} caractères</span>
-                  )}
-                  {selectedNote.wordCount !== undefined && (
-                    <span>📝 {selectedNote.wordCount} mots</span>
-                  )}
-                  {selectedNote.lineCount !== undefined && (
-                    <span>📄 {selectedNote.lineCount} lignes</span>
-                  )}
-                </div>
+          <h3 className="text-xl font-semibold text-orange-300">{selectedNote.title}</h3>
+          <div className="mt-4 flex gap-8 text-xs text-gray-400 items-center">
+            {selectedNote.sizeBytes !== undefined && (
+              <span>📦 {(selectedNote.sizeBytes / 1024).toFixed(2)} KB</span>
+            )}
+            {selectedNote.charCount !== undefined && (
+              <span>🔤 {selectedNote.charCount} caractères</span>
+            )}
+            {selectedNote.wordCount !== undefined && (
+              <span>📝 {selectedNote.wordCount} mots</span>
+            )}
+            {selectedNote.lineCount !== undefined && (
+              <span>📄 {selectedNote.lineCount} lignes</span>
+            )}
+
+            {/* feedback du debouncing */}
+            <span
+              className="ml-auto flex items-center"
+              style={{ minWidth: "110px", justifyContent: "flex-end" }}
+            >
+              <span style={{ width: 24, height: 24, display: "inline-block", marginRight: 4 }}>
+                {saveStatus === "saving" && (
+                  <span className="inline-block animate-pulse">
+                    <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="orange" viewBox="0 0 24 24">
+                      <path d="M13.383 4.076a6.5 6.5 0 0 0-6.887 3.95A5 5 0 0 0 7 18h3v-4a2 2 0 0 1-1.414-3.414l2-2a2 2 0 0 1 2.828 0l2 2A2 2 0 0 1 14 14v4h4a4 4 0 0 0 .988-7.876 6.5 6.5 0 0 0-5.605-6.048Z"/>
+                      <path d="M12.707 9.293a1 1 0 0 0-1.414 0l-2 2a1 1 0 1 0 1.414 1.414l.293-.293V19a1 1 0 1 0 2 0v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-2-2Z"/>
+                    </svg>
+                  </span>
+                )}
+              </span>
+              {saveStatus === "saved" && (
+                <span className="inline-block animate-pulse">
+                    <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="green" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.793-1.793a1 1 0 0 0-1.414 1.414l2.5 2.5a1 1 0 0 0 1.414 0l4-4Z" clip-rule="evenodd"/>
+              </svg>
+
+                  </span>
+              )}
+              {saveStatus === "error" && (
+                <span className="inline-block animate-pulse">
+                  <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="red" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                  </svg>
+
+                </span>
+              )}
+            </span>
+          </div>
               </div>
             ) : (
               <span className="text-sm text-gray-400">Aucune note sélectionnée</span>
